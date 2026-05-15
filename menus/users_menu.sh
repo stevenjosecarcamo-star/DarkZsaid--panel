@@ -1,191 +1,14 @@
 
 
 dz_borrar_1_user_directo_final() {
-    clear
-
-    USERDIR="/etc/adm-lite/userDIR"
-    mkdir -p "$USERDIR"
-
-    echo -e "${AMARILLO}────────────────────────────────────────────${RESET}"
-    echo -e "${AZUL}USUARIOS REGISTRADOS${RESET}"
-    echo -e "${AMARILLO}────────────────────────────────────────────${RESET}"
-    echo ""
-
-    USERS=()
-    FILES=()
-    TIPOS=()
-    TOKENS=()
-
-    # Leer SOLO los usuarios registrados en userDIR.
-    # Así sale igual que en MOSTRAR USUARIOS.
-    while IFS= read -r f; do
-        [ -f "$f" ] || continue
-
-        user="$(grep -m1 '^usuario:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-        senha="$(grep -m1 '^senha:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-        token="$(grep -m1 '^token:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-        limite="$(grep -m1 '^limite:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-
-        [ -z "$user" ] && user="$(basename "$f")"
-        [ -z "$token" ] && token="$senha"
-
-        if [ "$limite" = "TOKEN" ]; then
-            tipo="TOKEN"
-        elif [ "$limite" = "HWID" ]; then
-            tipo="HWID"
-        else
-            tipo="NORMAL"
-        fi
-
-        USERS+=("$user")
-        FILES+=("$f")
-        TIPOS+=("$tipo")
-        TOKENS+=("$token")
-    done < <(find "$USERDIR" -maxdepth 1 -type f 2>/dev/null | sort)
-
-    total="${#USERS[@]}"
-
-    if [ "$total" -eq 0 ]; then
-        echo -e "${ROJO}No hay usuarios registrados.${RESET}"
-        echo ""
-        read -p "¡Enter, para volver!"
-        return
-    fi
-
-    i=0
-    while [ "$i" -lt "$total" ]; do
-        n=$((i+1))
-
-        if [ "${TIPOS[$i]}" = "TOKEN" ]; then
-            echo -e "${ROJO}[$n]${RESET} ↪ ${BLANCO}${USERS[$i]}${RESET} ->      ${ROJO}[TOKEN]${RESET}"
-            echo -e "    ${CYAN}↪ TOKEN -${RESET} ${VERDE}${TOKENS[$i]}${RESET}"
-        elif [ "${TIPOS[$i]}" = "HWID" ]; then
-            echo -e "${ROJO}[$n]${RESET} ↪ ${BLANCO}${USERS[$i]}${RESET} ->      ${ROJO}[HWID]${RESET}"
-        else
-            echo -e "${ROJO}[$n]${RESET} ↪ ${BLANCO}${USERS[$i]}${RESET} ->      ${VERDE}[NORMAL]${RESET}"
-        fi
-
-        i=$((i+1))
-    done
-
-    echo ""
-    echo -e "${AMARILLO}────────────────────────────────────────────${RESET}"
-    read -p "ESCRIBE número del usuario a borrar: " num
-
-    if ! [[ "$num" =~ ^[0-9]+$ ]]; then
-        echo "Número inválido."
-        read -p "¡Enter, para volver!"
-        return
-    fi
-
-    idx=$((num-1))
-
-    if [ "$idx" -lt 0 ] || [ "$idx" -ge "$total" ]; then
-        echo "Ese número no existe."
-        read -p "¡Enter, para volver!"
-        return
-    fi
-
-    user="${USERS[$idx]}"
-    file="${FILES[$idx]}"
-    tipo="${TIPOS[$idx]}"
-
-    echo ""
-    echo -e "${AMARILLO}Vas a borrar:${RESET} $user [$tipo]"
-    read -p "Escribe SI para confirmar: " conf
-
-    if [ "$conf" != "SI" ]; then
-        echo "Cancelado."
-        read -p "¡Enter, para volver!"
-        return
-    fi
-
-    # Borrar registro userDIR
-    [ -n "$file" ] && [ -f "$file" ] && rm -f "$file"
-    [ -f "$USERDIR/$user" ] && rm -f "$USERDIR/$user"
-
-    # Si además existe como usuario Linux normal, borrarlo también.
-    # Esto no afecta tokens que no existen como Linux.
-    if id "$user" >/dev/null 2>&1; then
-        uid="$(id -u "$user")"
-        if [ "$uid" -ge 1000 ]; then
-            deluser --remove-home "$user" >/dev/null 2>&1 || userdel -r "$user" >/dev/null 2>&1 || true
-        fi
-    fi
-
-    echo ""
-    echo -e "${VERDE}Usuario borrado correctamente.${RESET}"
-    read -p "¡Enter, para volver!"
+    bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh one
 }
+
 
 dz_borrar_todos_sin_preguntar_registrados_final() {
-    clear
-
-    USERDIR="/etc/adm-lite/userDIR"
-    mkdir -p "$USERDIR"
-
-    echo -e "${ROJO}────────────────────────────────────────────${RESET}"
-    echo -e "${ROJO}BORRAR TODOS LOS USUARIOS REGISTRADOS${RESET}"
-    echo -e "${ROJO}────────────────────────────────────────────${RESET}"
-    echo ""
-
-    mapfile -t ARCHIVOS < <(find "$USERDIR" -maxdepth 1 -type f 2>/dev/null | sort)
-
-    total="${#ARCHIVOS[@]}"
-
-    if [ "$total" -eq 0 ]; then
-        echo -e "${AMARILLO}No hay usuarios registrados para borrar.${RESET}"
-        echo ""
-        read -p "¡Enter, para volver!"
-        return
-    fi
-
-    echo -e "${VERDE}Se borrarán estos usuarios registrados:${RESET}"
-    echo ""
-
-    i=1
-    for f in "${ARCHIVOS[@]}"; do
-        user="$(grep -m1 '^usuario:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-        limite="$(grep -m1 '^limite:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-
-        [ -z "$user" ] && user="$(basename "$f")"
-        [ -z "$limite" ] && limite="NORMAL"
-
-        echo -e "${CYAN}[$i]${RESET} $user ${ROJO}[$limite]${RESET}"
-        i=$((i+1))
-    done
-
-    echo ""
-    echo -e "${ROJO}Borrando todos los registros...${RESET}"
-    echo ""
-
-    borrados=0
-
-    for f in "${ARCHIVOS[@]}"; do
-        user="$(grep -m1 '^usuario:' "$f" 2>/dev/null | cut -d':' -f2- | xargs)"
-        [ -z "$user" ] && user="$(basename "$f")"
-
-        rm -f "$f"
-
-        # Si existe como usuario Linux normal, también se borra.
-        # Los TOKEN solo registrados en userDIR se borran con su archivo.
-        if id "$user" >/dev/null 2>&1; then
-            uid="$(id -u "$user")"
-
-            if [ "$uid" -ge 1000 ]; then
-                deluser --remove-home "$user" >/dev/null 2>&1 || userdel -r "$user" >/dev/null 2>&1 || true
-            fi
-        fi
-
-        borrados=$((borrados+1))
-    done
-
-    echo ""
-    echo -e "${VERDE}Todos los usuarios registrados fueron borrados.${RESET}"
-    echo -e "${VERDE}Total borrados: $borrados${RESET}"
-    echo ""
-    read -p "¡Enter, para volver!"
+    bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh all
 }
+
 
 
 modificar_contrasena_token() {
@@ -596,50 +419,43 @@ eliminar_un_usuario() {
     echo -e "${VERDE}✔ Usuario eliminado si existía:${RESET} $usuario"
     pausa_local
 }
-
 eliminar_caducados() {
-    titulo_users "ELIMINAR USUARIOS CADUCADOS"
+    while true; do
+        clear
+        titulo_users "ELIMINAR USUARIOS"
+        echo -e "${ROJO}[01]${RESET} ${CYAN}➜${RESET} ${BLANCO}1 USER${RESET}"
+        echo -e "${ROJO}[02]${RESET} ${CYAN}➜${RESET} ${BLANCO}TODOS ITERATIVO 1x1${RESET} ${VERDE}[RECOMENDADO]${RESET}"
+        echo -e "${ROJO}[03]${RESET} ${CYAN}➜${RESET} ${BLANCO}SOLO CADUCADOS${RESET}"
+        echo -e "${ROJO}[04]${RESET} ${CYAN}➜${RESET} ${ROJO}BORRAR TODO${RESET}"
+        echo ""
+        echo -e "${ROJO}[00]${RESET} ${CYAN}➜${RESET} ${BLANCO}[ VOLVER ]${RESET}"
+        echo ""
+        read -p "⚡ Opción: " opc
 
-    hoy="$(date +%Y-%m-%d)"
-    temp="$USER_DB.tmp"
-    > "$temp"
-
-    eliminados=0
-
-    while IFS='|' read -r usuario pass tipo limite dias expira; do
-        [[ -z "$usuario" ]] && continue
-
-        if [[ "$expira" < "$hoy" ]]; then
-            userdel -f "$usuario" >/dev/null 2>&1 || true
-            echo "Eliminado: $usuario"
-            eliminados=$((eliminados+1))
-        else
-            echo "$usuario|$pass|$tipo|$limite|$dias|$expira" >> "$temp"
-        fi
-    done < "$USER_DB" 2>/dev/null
-
-    mv "$temp" "$USER_DB"
-
-    temp2="$TOKEN_DB.tmp"
-    > "$temp2"
-
-    while IFS='|' read -r TOKEN dias expira; do
-        [[ -z "$usuario" ]] && continue
-
-        if [[ "$expira" < "$hoy" ]]; then
-            echo "Token eliminado: $usuario"
-            eliminados=$((eliminados+1))
-        else
-            echo "$usuario|$token|$dias|$expira" >> "$temp2"
-        fi
-    done < "$TOKEN_DB" 2>/dev/null
-
-    mv "$temp2" "$TOKEN_DB"
-
-    echo ""
-    echo -e "${VERDE}✔ Caducados eliminados:${RESET} $eliminados"
-    pausa_local
+        case "$opc" in
+            1|01)
+                bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh one
+                ;;
+            2|02)
+                bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh one
+                ;;
+            3|03)
+                bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh one
+                ;;
+            4|04)
+                bash /opt/darkzsaid/menus/eliminar_usuarios_full.sh all
+                ;;
+            0|00)
+                return
+                ;;
+            *)
+                echo -e "${ROJO}Opción inválida.${RESET}"
+                sleep 1
+                ;;
+        esac
+    done
 }
+
 
 eliminar_todos() {
     titulo_users "ELIMINAR TODOS LOS USUARIOS"

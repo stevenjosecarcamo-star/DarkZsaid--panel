@@ -269,9 +269,10 @@ menu_principal() {
         echo -e "${ROJO}[1]${RESET} ${CYAN}➜${RESET} ${BLANCO}CONTROL USUARIOS (SSH/SSL/UDP)${RESET}        ${VERDE}●${RESET}"
         echo -e "${ROJO}[2]${RESET} ${CYAN}➜${RESET} ${BLANCO}INSTALADORES & PROTOCOLOS${RESET}       ${CYAN}▣${RESET}"
         echo -e "${ROJO}[3]${RESET} ${CYAN}➜${RESET} ${BLANCO}HERRAMIENTAS${RESET}                    ${AMARILLO}◉${RESET}"
-        echo -e "${ROJO}[4]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}                     ${CYAN}▤${RESET}"
+        echo -e "${ROJO}[4]${RESET} ${CYAN}➜${RESET} ${BLANCO}AUTOINICIAR SCRIPT $(bash /opt/darkzsaid/autostart_toggle.sh badge)${RESET}"
         echo -e "${ROJO}[5]${RESET} ${CYAN}➜${RESET} ${BLANCO}ADMINISTRAR PUERTOS${RESET}            ${VERDE}✚${RESET}"
         echo -e "${ROJO}[6]${RESET} ${CYAN}➜${RESET} ${BLANCO}BOT TELEGRAM OPCIONAL${RESET}          ${ROJO}◆${RESET}"
+        echo -e "${ROJO}[7]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}"
         echo ""
         echo -e "${ROJO}[99]${RESET} ${CYAN}➜${RESET} ${AMARILLO}REBOOT VPS${RESET}                  ${ROJO}⟳${RESET}"
         echo -e "${ROJO}[0]${RESET}  ${CYAN}➜${RESET} ${ROJO}SALIR${RESET}                       ${AMARILLO}↩${RESET}"
@@ -283,13 +284,25 @@ menu_principal() {
 
         read -p "⚡ Seleccione una opción: " op
 
-        case "$op" in
+        
+case "$op" in
             1) bash /opt/darkzsaid/menus/users_menu.sh ;;
             2) menu_instaladores ;;
             3) menu_herramientas ;;
-            4) menu_banner ;;
-            5) menu_puertos ;;
-            6) menu_bot ;;
+        4|04)
+            bash /opt/darkzsaid/autostart_toggle.sh toggle_once
+            ;;
+        5|05)
+            menu_puertos
+            ;;
+        6|06)
+            menu_bot
+            ;;
+        7|07)
+            menu_banner
+            ;;
+
+
             99) reboot ;;
             0) clear; exit ;;
             *) echo "Opción inválida"; sleep 1 ;;
@@ -422,7 +435,8 @@ menu_instaladores() {
             1|01) abrir_puertos_recomendados ;;
             2|02) menu_appmods ;;
             3|03) menu_udp_custom_seguro ;;
-            4|04) menu_zivpn_seguro ;;
+            4|04) bash /opt/darkzsaid/autostart_toggle.sh
+        ;;
             5|05) menu_socks_python_ws ;;
             6|06) instalar_dropbear ;;
             7|07) instalar_stunnel ;;
