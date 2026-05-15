@@ -37,6 +37,52 @@ if [[ -d "$APP_DIR" ]]; then
     rm -rf "$APP_DIR"
 fi
 
+
+echo ""
+echo -e "${CYAN}Limpiando protocolos/puertos activos anteriores...${RESET}"
+
+SERVICIOS_LIMPIAR=(
+  nginx
+  stunnel4
+  stunnel
+  dropbear
+  badvpn
+  badvpn-udpgw
+  udp-custom
+  udpmod
+  hysteria-server
+  hysteria
+  zivpn
+  sipvpn-activex
+  socks
+  socks-ws
+  ws
+  ws-stunnel
+  python-ws
+)
+
+for s in "${SERVICIOS_LIMPIAR[@]}"; do
+    systemctl stop "$s" 2>/dev/null || true
+    systemctl disable "$s" 2>/dev/null || true
+done
+
+pkill -f "badvpn" 2>/dev/null || true
+pkill -f "stunnel" 2>/dev/null || true
+pkill -f "nginx" 2>/dev/null || true
+pkill -f "socks-python" 2>/dev/null || true
+pkill -f "ssh-ws" 2>/dev/null || true
+pkill -f "udp-custom" 2>/dev/null || true
+pkill -f "udpmod" 2>/dev/null || true
+pkill -f "hysteria" 2>/dev/null || true
+pkill -f "ZipVPN" 2>/dev/null || true
+
+ufw --force reset 2>/dev/null || true
+ufw allow 22/tcp 2>/dev/null || true
+ufw --force enable 2>/dev/null || true
+
+echo -e "${VERDE}Limpieza inicial aplicada. Solo SSH 22 queda permitido por defecto.${RESET}"
+
+
 echo ""
 echo -e "${CYAN}Descargando DarkZsaid Panel limpio...${RESET}"
 
