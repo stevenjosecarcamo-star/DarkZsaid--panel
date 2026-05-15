@@ -28,7 +28,7 @@ apt update
 apt install -y git curl wget nano ufw python3 python3-pip python3-venv openssl lsof net-tools unzip iptables-persistent netfilter-persistent sshpass rsync
 
 echo ""
-echo -e "${CYAN}Preparando instalación...${RESET}"
+echo -e "${CYAN}Preparando instalación limpia...${RESET}"
 
 if [[ -d "$APP_DIR" ]]; then
     FECHA=$(date +%Y%m%d-%H%M%S)
@@ -38,7 +38,7 @@ if [[ -d "$APP_DIR" ]]; then
 fi
 
 echo ""
-echo -e "${CYAN}Descargando DarkZsaid Panel...${RESET}"
+echo -e "${CYAN}Descargando DarkZsaid Panel limpio...${RESET}"
 
 git clone "$REPO_URL" "$APP_DIR"
 
@@ -48,7 +48,7 @@ if [[ ! -d "$APP_DIR" ]]; then
 fi
 
 echo ""
-echo -e "${CYAN}Ejecutando instalador principal...${RESET}"
+echo -e "${CYAN}Ejecutando instalador principal limpio...${RESET}"
 
 cd "$APP_DIR" || exit 1
 
@@ -70,7 +70,13 @@ chmod +x /usr/local/bin/darkzsaid
 chmod +x /usr/local/bin/menu
 
 echo ""
-echo -e "${VERDE}${BOLD}Instalación terminada correctamente.${RESET}"
+echo -e "${VERDE}${BOLD}Instalación limpia terminada correctamente.${RESET}"
+echo ""
+echo -e "${AMARILLO}Estado inicial:${RESET}"
+echo "Solo SSH 22 queda abierto."
+echo "Sin usuarios copiados."
+echo "Sin tokens copiados."
+echo "Sin protocolos activados automáticamente."
 echo ""
 echo -e "${AMARILLO}Comandos disponibles:${RESET}"
 echo "menu"

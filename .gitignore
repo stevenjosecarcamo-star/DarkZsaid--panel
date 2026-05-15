@@ -1,15 +1,15 @@
-# Secretos y configuración real
+# Configuración real
 .env
 *.env
 config.env
 bot/.env
 
-# Keys / certificados
+# Claves y certificados
 *.key
 *.pem
 *.crt
 
-# Logs y backups
+# Logs, backups y temporales
 logs/
 backups/
 *.log
@@ -26,7 +26,7 @@ data/*
 users/*
 !users/README.md
 
-# ZIVPN datos reales
+# ZIVPN/SIPVPN datos reales
 sipvpn-activex/etc_zivpn/config.json
 sipvpn-activex/etc_zivpn/users.json
 sipvpn-activex/etc_zivpn/claves_fecha.txt
@@ -35,4 +35,6 @@ sipvpn-activex/etc_zivpn/temp.json
 sipvpn-activex/etc_zivpn/data
 sipvpn-activex/etc_zivpn/*.key
 sipvpn-activex/etc_zivpn/*.crt
+sipvpn-activex/etc_zivpn/*.pem
+sipvpn-activex/etc_zivpn/zivpn/
 !sipvpn-activex/etc_zivpn/README.md

@@ -1,3 +1,2 @@
-Aquí van configs reales de ZIVPN en cada VPS.
-
-No subir claves .key, certificados .crt, usuarios.json ni config.json reales.
+Carpeta para configuración real de ZIVPN en cada VPS.
+No subir claves, certificados ni usuarios reales.
