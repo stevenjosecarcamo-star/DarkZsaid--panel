@@ -51,11 +51,12 @@ echo ""
 echo -e "${CYAN}Ejecutando instalador principal...${RESET}"
 
 cd "$APP_DIR" || exit 1
-chmod +x install.sh
+
+chmod +x install.sh 2>/dev/null || true
 bash install.sh
 
 echo ""
-echo -e "${CYAN}Instalando comando de actualización...${RESET}"
+echo -e "${CYAN}Instalando comandos globales...${RESET}"
 
 if [[ -f "$APP_DIR/darkzsaid-update.sh" ]]; then
     chmod +x "$APP_DIR/darkzsaid-update.sh"
