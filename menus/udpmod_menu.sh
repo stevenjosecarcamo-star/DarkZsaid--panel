@@ -52,7 +52,7 @@ instalar_udpmod(){
             -days 3650 >/dev/null 2>&1
     fi
 
-    cat > /opt/UDPMOD/config.json <<JSON
+    cat > /etc/udpmod/config.json <<JSON
 {
   "listen": ":36712",
   "cert": "/opt/UDPMOD/udpmod.server.crt",
@@ -96,7 +96,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=/opt/UDPMOD
-ExecStart=$BIN server -c /opt/UDPMOD/config.json
+ExecStart=$BIN server -c /etc/udpmod/config.json
 Restart=always
 RestartSec=3
 User=root
@@ -146,7 +146,7 @@ estado_udpmod(){
     echo "Servicio:"; systemctl is-active udpmod 2>/dev/null || echo "inactive"
     echo ""; echo "Puerto:"; ss -ulnp | grep 36712 || echo "36712 UDP no está escuchando."
     echo ""; echo "Redirección:"; iptables -t nat -S PREROUTING | grep 36712 || echo "Sin redirección."
-    echo ""; echo "Config:"; cat /opt/UDPMOD/config.json 2>/dev/null || echo "No instalado."
+    echo ""; echo "Config:"; cat /etc/udpmod/config.json 2>/dev/null || echo "No instalado."
     pausa
 }
 

@@ -485,13 +485,13 @@ estado_limpio_udpm() {
     titulo "DARKZSAID UDP HYSTERIA"
 
     IP=$(get_ip)
-    CONFIG="/opt/UDPMOD/config.json"
+    CONFIG="/etc/udpmod/config.json"
 
     if [[ -f "$CONFIG" ]]; then
         OBFS_ACTUAL=$(grep '"obfs"' "$CONFIG" | head -1 | cut -d'"' -f4)
         ALPN_ACTUAL=$(grep '"alpn"' "$CONFIG" | head -1 | cut -d'"' -f4)
     else
-        OBFS_ACTUAL="No instalado"
+        OBFS_ACTUAL="DarkZsaid"
         ALPN_ACTUAL="h3"
     fi
 
@@ -596,7 +596,7 @@ menu_appmods() {
                 ;;
             4) estado_limpio_udpm ;;
             5)
-                cat /opt/UDPMOD/config.json 2>/dev/null || echo "No existe config."
+                cat /etc/udpmod/config.json 2>/dev/null || echo "No existe config."
                 pausa
                 ;;
             6) cambiar_obfs_appmods ;;
@@ -693,10 +693,10 @@ datos_appmods() {
 
     IP=$(get_ip)
 
-    if [[ -f /opt/UDPMOD/config.json ]]; then
-        OBFS_ACTUAL=$(grep '"obfs"' /opt/UDPMOD/config.json | head -1 | cut -d'"' -f4)
+    if [[ -f /etc/udpmod/config.json ]]; then
+        OBFS_ACTUAL=$(grep '"obfs"' /etc/udpmod/config.json | head -1 | cut -d'"' -f4)
     else
-        OBFS_ACTUAL="No instalado"
+        OBFS_ACTUAL="DarkZsaid"
     fi
 
     echo -e "${VERDE}Servidor UDP/IP:${RESET} $IP"
