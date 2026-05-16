@@ -1,225 +1,237 @@
 #!/bin/bash
-[[ -f /opt/darkzsaid/lib/puertas_reales.sh ]] && source /opt/darkzsaid/lib/puertas_reales.sh
 
-ROJO="\e[31m"; VERDE="\e[32m"; AMARILLO="\e[33m"; AZUL="\e[34m"
-CYAN="\e[36m"; BLANCO="\e[97m"; RESET="\e[0m"; BOLD="\e[1m"
-IP="216.238.113.15"
+ROJO="\e[31m"
+VERDE="\e[32m"
+AMARILLO="\e[33m"
+CYAN="\e[36m"
+BLANCO="\e[97m"
+RESET="\e[0m"
+BOLD="\e[1m"
+
+SCRIPT="/opt/darkzsaid/ssh-ws-direct.py"
+SERVICE="/etc/systemd/system/darkzsaid-ws80.service"
+
+pausa() {
+    echo ""
+    read -p "Presiona ENTER para continuar..."
+}
 
 titulo() {
     clear
-    echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${CYAN}║${RESET}        ${BLANCO}${BOLD}⚡ DARKZSAID CONTROL ⚡${RESET}             ${CYAN}║${RESET}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
-    echo ""
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-    echo -e "${VERDE}        $1${RESET}"
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "${ROJO}════════════════════════════════════════════${RESET}"
+    echo -e "${BLANCO}${BOLD}        SOCKS PYTHON DIRECTO WS             ${RESET}"
+    echo -e "${ROJO}════════════════════════════════════════════${RESET}"
     echo ""
 }
 
-
-pausa(){ echo ""; read -p "Presiona ENTER para continuar..."; }
-titulo(){ clear; echo -e "${ROJO}══════════════════════════ / / / ══════════════════════════${RESET}"; echo -e "${BLANCO}${BOLD}          $1${RESET}"; echo -e "${ROJO}══════════════════════════ / / / ══════════════════════════${RESET}"; echo ""; }
-
-instalar_ws(){
-    titulo "ACTIVAR SOCKS PYTHON DIRECTO WS"
-
-    if ! command -v python2 >/dev/null 2>&1; then
-        echo "Python2 no está instalado."
-        echo "Este módulo necesita python2."
-        pausa
-        return
+estado_ws80() {
+    if systemctl is-active --quiet darkzsaid-ws80 2>/dev/null; then
+        echo -e "${VERDE}[ON]${RESET}"
+    else
+        echo -e "${ROJO}[OFF]${RESET}"
     fi
+}
 
-    systemctl stop gost-http80 2>/dev/null
-    systemctl disable gost-http80 2>/dev/null
-    systemctl stop squid 2>/dev/null
-    systemctl disable squid 2>/dev/null
-    systemctl stop nginx 2>/dev/null
-    systemctl disable nginx 2>/dev/null
-    systemctl mask nginx 2>/dev/null
-    systemctl stop socks-python-ws@80 2>/dev/null
-    systemctl disable socks-python-ws@80 2>/dev/null
-    systemctl mask socks-python-ws@80 2>/dev/null
-    systemctl stop socks-python2-ws 2>/dev/null
-    systemctl disable socks-python2-ws 2>/dev/null
-    systemctl stop ssh-ws 2>/dev/null
-    systemctl disable ssh-ws 2>/dev/null
-    systemctl unmask ssh-ws 2>/dev/null
-
-    fuser -k 80/tcp 2>/dev/null
-    sleep 2
-
-    mkdir -p /opt/darkzsaid
-
-    cat > /opt/darkzsaid/ssh-ws-direct.py <<'PYEOF'
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-
+crear_script_ws80() {
+cat > "$SCRIPT" <<'PY'
+#!/usr/bin/env python3
 import socket
 import threading
-import select
 
 LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 80
 SSH_HOST = "127.0.0.1"
 SSH_PORT = 22
-BRAND = "ADM SJCC"
 
-def response_200():
-    return (
-        "HTTP/1.1 200 Connection established " + BRAND + "\r\n"
-        "\r\n"
-    )
+RESPONSE_200 = (
+    "HTTP/1.1 200 Connection established ADM SJCC\r\n"
+    "Connection: keep-alive\r\n"
+    "Proxy-Agent: ADM SJCC\r\n"
+    "X-Powered-By: DarkZsaid\r\n"
+    "\r\n"
+).encode()
 
-def is_http_payload(data):
-    if not data:
-        return False
-    d = data[:500].upper()
-    return (
-        d.startswith("GET ") or d.startswith("POST ") or d.startswith("CONNECT ") or
-        d.startswith("OPTIONS ") or d.startswith("HTTP/") or
-        "HOST:" in d or "UPGRADE:" in d or "HTTP/" in d
-    )
+BUFFER_SIZE = 65535
 
-def tunnel(client, remote):
-    sockets = [client, remote]
+def pipe(src, dst):
     try:
         while True:
-            readable, _, errors = select.select(sockets, [], sockets, 180)
-            if errors or not readable:
+            data = src.recv(BUFFER_SIZE)
+            if not data:
                 break
-            for s in readable:
-                data = s.recv(8192)
-                if not data:
-                    return
-                if s is client:
-                    remote.sendall(data)
-                else:
-                    client.sendall(data)
-    except:
+            dst.sendall(data)
+    except Exception:
         pass
-    try: client.close()
-    except: pass
-    try: remote.close()
-    except: pass
+    finally:
+        try:
+            src.close()
+        except Exception:
+            pass
+        try:
+            dst.close()
+        except Exception:
+            pass
 
 def handle_client(client, addr):
+    ssh = None
     try:
-        client.settimeout(15)
+        client.settimeout(10)
         try:
-            first = client.recv(8192)
-        except:
-            first = ""
-        client.sendall(response_200())
-        remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        remote.settimeout(15)
-        remote.connect((SSH_HOST, SSH_PORT))
+            data = client.recv(BUFFER_SIZE)
+        except Exception:
+            data = b""
+
+        if data:
+            client.sendall(RESPONSE_200)
+
+        ssh = socket.create_connection((SSH_HOST, SSH_PORT), timeout=10)
+
         client.settimeout(None)
-        remote.settimeout(None)
-        if first and not is_http_payload(first):
-            remote.sendall(first)
-        tunnel(client, remote)
-    except:
-        try: client.close()
-        except: pass
+        ssh.settimeout(None)
+
+        t1 = threading.Thread(target=pipe, args=(client, ssh), daemon=True)
+        t2 = threading.Thread(target=pipe, args=(ssh, client), daemon=True)
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+    except Exception:
+        try:
+            client.close()
+        except Exception:
+            pass
+        try:
+            if ssh:
+                ssh.close()
+        except Exception:
+            pass
 
 def main():
-    print("[DarkZsaid] Socks Python Directo WS")
-    print("[DarkZsaid] 0.0.0.0:80 -> 127.0.0.1:22")
-    print("[DarkZsaid] Response: HTTP/1.1 200 Connection established " + BRAND)
+    print("DarkZsaid SSH WS Direct 200 Establish ADM SJCC")
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((LISTEN_HOST, LISTEN_PORT))
     server.listen(500)
+
     while True:
         client, addr = server.accept()
-        t = threading.Thread(target=handle_client, args=(client, addr))
-        t.daemon = True
-        t.start()
+        threading.Thread(target=handle_client, args=(client, addr), daemon=True).start()
 
 if __name__ == "__main__":
     main()
-PYEOF
+PY
 
-    chmod +x /opt/darkzsaid/ssh-ws-direct.py
+chmod +x "$SCRIPT"
+}
 
-    cat > /etc/systemd/system/ssh-ws.service <<'SERVICE'
+crear_servicio_ws80() {
+cat > "$SERVICE" <<'EOSERVICE'
 [Unit]
-Description=Socks Python Directo WS - Established 200 ADM SJCC
-After=network.target
+Description=DarkZsaid SSH WS Direct 200 Establish ADM SJCC
+After=network.target ssh.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python2 /opt/darkzsaid/ssh-ws-direct.py
+ExecStart=/usr/bin/python3 /opt/darkzsaid/ssh-ws-direct.py
 Restart=always
 RestartSec=3
 User=root
-LimitNOFILE=1048576
 
 [Install]
 WantedBy=multi-user.target
-SERVICE
+EOSERVICE
+
+systemctl daemon-reload
+systemctl enable darkzsaid-ws80 >/dev/null 2>&1
+}
+
+activar_ws80() {
+    titulo
+    echo -e "${CYAN}Activando método 200 Establish ADM SJCC en puerto 80...${RESET}"
+    echo ""
+
+    crear_script_ws80
+    crear_servicio_ws80
+
+    systemctl stop nginx 2>/dev/null || true
+    systemctl disable nginx 2>/dev/null || true
+
+    pkill -f "socks-python" 2>/dev/null || true
+    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
 
     ufw allow 80/tcp 2>/dev/null || true
-    ufw allow 22/tcp 2>/dev/null || true
+    ufw reload 2>/dev/null || true
 
-    systemctl daemon-reload
-    systemctl enable ssh-ws
-    systemctl restart ssh-ws
+    systemctl restart darkzsaid-ws80
+    sleep 2
 
-    echo -e "${VERDE}SOCKS PYTHON DIRECTO WS activado.${RESET}"
+    echo -e "${AMARILLO}Estado:${RESET} $(estado_ws80)"
+    echo ""
+    echo -e "${AMARILLO}Puerto 80:${RESET}"
+    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
+
+    echo ""
+    echo -e "${AMARILLO}Respuesta:${RESET}"
+    echo -e "GET / HTTP/1.1\r\nHost: test\r\n\r\n" | nc -w 2 127.0.0.1 80 2>/dev/null || true
+
+    echo ""
+    echo -e "${VERDE}Método activado correctamente.${RESET}"
     pausa
 }
 
-detener_ws(){ titulo "DETENER SOCKS PYTHON DIRECTO WS"; systemctl stop ssh-ws 2>/dev/null; echo "Servicio detenido."; ss -tulnp | grep ':80' || echo "Puerto 80 libre."; pausa; }
-reiniciar_ws(){ titulo "REINICIAR SOCKS PYTHON DIRECTO WS"; systemctl restart ssh-ws 2>/dev/null; echo "Servicio reiniciado."; ss -tulnp | grep ':80' || echo "Puerto 80 no está escuchando."; pausa; }
-remover_ws(){
-    titulo "REMOVER SOCKS PYTHON DIRECTO WS"
-    read -p "¿Seguro que quieres removerlo? [s/n]: " r
-    [[ "$r" != "s" && "$r" != "S" ]] && echo "Cancelado." && pausa && return
-    systemctl stop ssh-ws 2>/dev/null
-    systemctl disable ssh-ws 2>/dev/null
-    rm -f /etc/systemd/system/ssh-ws.service
-    rm -f /opt/darkzsaid/ssh-ws-direct.py
-    systemctl daemon-reload
-    echo "Removido."
-    ss -tulnp | grep ':80' || echo "Puerto 80 libre."
+detener_ws80() {
+    titulo
+    systemctl stop darkzsaid-ws80 2>/dev/null || true
+    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
+    echo -e "${AMARILLO}SOCKS PYTHON DIRECTO WS detenido.${RESET}"
     pausa
 }
-estado_ws(){
-    titulo "ESTADO SOCKS PYTHON DIRECTO WS"
-    echo "Servicio:"; systemctl is-active ssh-ws 2>/dev/null || echo "inactive"
-    echo ""; echo "Puerto 80:"; ss -tulnp | grep ':80' || echo "Puerto 80 no está escuchando."
-    echo ""; echo "Response:"; grep 'Connection established' /opt/darkzsaid/ssh-ws-direct.py 2>/dev/null || echo "No instalado."
-    echo ""; echo "Datos:"
-    echo "Host/IP: $IP"
-    echo "Puerto: 80"
-    echo "SSH Host: $IP"
-    echo "SSH Puerto: 22"
-    echo "Response: HTTP/1.1 200 Connection established ADM SJCC"
+
+reiniciar_ws80() {
+    titulo
+    systemctl restart darkzsaid-ws80 2>/dev/null || true
+    sleep 2
+    echo -e "${AMARILLO}Estado:${RESET} $(estado_ws80)"
+    echo ""
+    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
+    pausa
+}
+
+estado_detallado() {
+    titulo
+    echo -e "${AMARILLO}Estado:${RESET} $(estado_ws80)"
+    echo ""
+    echo -e "${AMARILLO}Servicio:${RESET}"
+    systemctl status darkzsaid-ws80 --no-pager -l 2>/dev/null | head -30 || echo "Servicio no creado."
+    echo ""
+    echo -e "${AMARILLO}Puerto 80:${RESET}"
+    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
+    echo ""
+    echo -e "${AMARILLO}Respuesta 200 Establish:${RESET}"
+    echo -e "GET / HTTP/1.1\r\nHost: test\r\n\r\n" | nc -w 2 127.0.0.1 80 2>/dev/null || true
     pausa
 }
 
 while true; do
-    titulo "SOCKS PYTHON DIRECTO WS"
-    echo -e "${ROJO}[1]${RESET} ${AZUL}ACTIVAR / INSTALAR PUERTO 80${RESET}"
-    echo -e "${ROJO}[2]${RESET} ${AZUL}DETENER PUERTO 80${RESET}"
-    echo -e "${ROJO}[3]${RESET} ${AZUL}REINICIAR PUERTO 80${RESET}"
-    echo -e "${ROJO}[4]${RESET} ${AZUL}REMOVER PUERTO 80${RESET}"
-    echo -e "${ROJO}[5]${RESET} ${AZUL}VER ESTADO${RESET}"
-    echo -e "${ROJO}[6]${RESET} ${AZUL}VER LOGS${RESET}"
-    echo -e "${ROJO}[0]${RESET} ${BLANCO}VOLVER${RESET}"
+    titulo
+    echo -e "${ROJO}[01]${RESET} ${CYAN}➜${RESET} ${BLANCO}ACTIVAR 200 ESTABLISH ADM SJCC${RESET} $(estado_ws80)"
+    echo -e "${ROJO}[02]${RESET} ${CYAN}➜${RESET} ${BLANCO}DETENER${RESET}"
+    echo -e "${ROJO}[03]${RESET} ${CYAN}➜${RESET} ${BLANCO}REINICIAR${RESET}"
+    echo -e "${ROJO}[04]${RESET} ${CYAN}➜${RESET} ${BLANCO}VER ESTADO${RESET}"
     echo ""
-    read -p "⚡ Opción: " op
-    case "$op" in
-        1) instalar_ws ;;
-        2) detener_ws ;;
-        3) reiniciar_ws ;;
-        4) remover_ws ;;
-        5) estado_ws ;;
-        6) journalctl -u ssh-ws -n 80 --no-pager -l; pausa ;;
-        0) exit 0 ;;
-        *) echo "Opción inválida"; sleep 1 ;;
+    echo -e "${ROJO}[00]${RESET} ${CYAN}➜${RESET} ${BLANCO}VOLVER${RESET}"
+    echo ""
+    read -p "Seleccione una opción: " opc
+
+    case "$opc" in
+        1|01) activar_ws80 ;;
+        2|02) detener_ws80 ;;
+        3|03) reiniciar_ws80 ;;
+        4|04) estado_detallado ;;
+        0|00) exit 0 ;;
+        *) echo -e "${ROJO}Opción inválida.${RESET}"; sleep 1 ;;
     esac
 done

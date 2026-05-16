@@ -293,7 +293,7 @@ case "$op" in
             bash /opt/darkzsaid/autostart_toggle.sh toggle_once
             ;;
         5|05)
-            menu_puertos
+            bash /opt/darkzsaid/socks_ws_menu.sh
             ;;
         6|06)
             menu_bot
@@ -719,35 +719,9 @@ datos_appmods() {
 }
 
 menu_socks_python_ws() {
-    while true; do
-        titulo "SOCKS PYTHON DIRECTO WS"
-
-        echo -e "${ROJO}[1]${RESET} ${AZUL}INSTALAR BASE PYTHON WS${RESET}"
-        echo -e "${ROJO}[2]${RESET} ${AZUL}AGREGAR PUERTO WS PERSONALIZADO${RESET}"
-        echo -e "${ROJO}[3]${RESET} ${AZUL}DETENER PUERTO WS${RESET}"
-        echo -e "${ROJO}[4]${RESET} ${AZUL}REINICIAR PUERTO WS${RESET}"
-        echo -e "${ROJO}[5]${RESET} ${AZUL}VER ESTADO DE PUERTOS WS${RESET}"
-        echo -e "${ROJO}[6]${RESET} ${AZUL}VER CONFIGURACIONES WS${RESET}"
-        echo -e "${ROJO}[7]${RESET} ${AZUL}VER PUERTOS ACTIVOS${RESET}"
-        echo -e "${ROJO}[8]${RESET} ${AZUL}DESINSTALAR SOCKS PYTHON WS${RESET}"
-        echo -e "${ROJO}[0]${RESET} ${BLANCO}VOLVER${RESET}"
-        echo ""
-        read -p "Seleccione una opción: " op
-
-        case "$op" in
-            1) instalar_base_socks_python_ws ;;
-            2) agregar_puerto_ws ;;
-            3) detener_puerto_ws ;;
-            4) reiniciar_puerto_ws ;;
-            5) estado_puertos_ws ;;
-            6) ver_config_ws ;;
-            7) ss -tulnp; pausa ;;
-            8) desinstalar_socks_python_ws ;;
-            0) return ;;
-            *) echo "Opción inválida"; sleep 1 ;;
-        esac
-    done
+    bash /opt/darkzsaid/socks_ws_menu.sh
 }
+
 
 instalar_base_socks_python_ws() {
     titulo "INSTALAR BASE SOCKS PYTHON WS"
@@ -2598,4 +2572,73 @@ remover_ssh_ws_permanente() {
     echo ""
     ss -tulnp | grep ':80' || echo "Puerto 80 libre."
     pausa
+}
+
+instalar_sockpython_200_establish() {
+    clear
+    echo -e "${ROJO}════════════════════════════════════════════${RESET}"
+    echo -e "${BLANCO}${BOLD}   SOCKS PYTHON DIRECTO OS / 200 ESTABLISH ADM SJCC - 200 ESTABLISH  ${RESET}"
+    echo -e "${ROJO}════════════════════════════════════════════${RESET}"
+    echo ""
+
+    echo -e "${CYAN}Configurando método WebSocket puerto 80...${RESET}"
+
+    if [[ ! -f /opt/darkzsaid/ssh-ws-direct.py ]]; then
+        echo -e "${ROJO}No existe /opt/darkzsaid/ssh-ws-direct.py${RESET}"
+        echo ""
+        read -p "Presiona ENTER para continuar..."
+        return
+    fi
+
+    chmod +x /opt/darkzsaid/ssh-ws-direct.py
+
+    cat > /etc/systemd/system/darkzsaid-ws80.service <<'EOSERVICE'
+[Unit]
+Description=DarkZsaid SSH WS Direct 200 Establish ADM SJCC
+After=network.target ssh.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/darkzsaid/ssh-ws-direct.py
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOSERVICE
+
+    systemctl daemon-reload
+
+    # Detener servicios que puedan usar puerto 80
+    systemctl stop nginx 2>/dev/null || true
+    systemctl disable nginx 2>/dev/null || true
+    pkill -f "socks-python" 2>/dev/null || true
+    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
+
+    ufw allow 80/tcp 2>/dev/null || true
+    ufw reload 2>/dev/null || true
+
+    systemctl enable darkzsaid-ws80 >/dev/null 2>&1
+    systemctl restart darkzsaid-ws80
+
+    sleep 2
+
+    echo ""
+    echo -e "${AMARILLO}Estado del servicio:${RESET}"
+    systemctl is-active darkzsaid-ws80
+
+    echo ""
+    echo -e "${AMARILLO}Puerto 80:${RESET}"
+    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
+
+    echo ""
+    echo -e "${AMARILLO}Respuesta 200 Establish:${RESET}"
+    echo -e "GET / HTTP/1.1\r\nHost: test\r\n\r\n" | nc -w 2 127.0.0.1 80 2>/dev/null || true
+
+    echo ""
+    echo -e "${VERDE}Método activado correctamente.${RESET}"
+    echo -e "${CYAN}Respuesta esperada:${RESET} HTTP/1.1 200 Connection established ADM SJCC"
+    echo ""
+    read -p "Presiona ENTER para continuar..."
 }

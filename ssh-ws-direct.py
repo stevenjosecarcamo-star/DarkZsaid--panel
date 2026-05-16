@@ -1,87 +1,103 @@
-#!/usr/bin/env python2
-# -*- coding: utf-8 -*-
-
+#!/usr/bin/env python3
 import socket
 import threading
 import select
+import sys
 
 LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 80
+
 SSH_HOST = "127.0.0.1"
 SSH_PORT = 22
-BRAND = "ADM SJCC"
 
-def response_200():
-    return (
-        "HTTP/1.1 200 Connection established " + BRAND + "\r\n"
-        "\r\n"
-    )
+RESPONSE_200 = (
+    "HTTP/1.1 200 Connection established ADM SJCC\r\n"
+    "Connection: keep-alive\r\n"
+    "Proxy-Agent: ADM SJCC\r\n"
+    "\r\n"
+).encode()
 
-def is_http_payload(data):
-    if not data:
-        return False
-    d = data[:500].upper()
-    return (
-        d.startswith("GET ") or d.startswith("POST ") or d.startswith("CONNECT ") or
-        d.startswith("OPTIONS ") or d.startswith("HTTP/") or
-        "HOST:" in d or "UPGRADE:" in d or "HTTP/" in d
-    )
+BUFFER_SIZE = 65535
 
-def tunnel(client, remote):
-    sockets = [client, remote]
+
+def pipe(src, dst):
     try:
         while True:
-            readable, _, errors = select.select(sockets, [], sockets, 180)
-            if errors or not readable:
+            data = src.recv(BUFFER_SIZE)
+            if not data:
                 break
-            for s in readable:
-                data = s.recv(8192)
-                if not data:
-                    return
-                if s is client:
-                    remote.sendall(data)
-                else:
-                    client.sendall(data)
-    except:
+            dst.sendall(data)
+    except Exception:
         pass
-    try: client.close()
-    except: pass
-    try: remote.close()
-    except: pass
+    finally:
+        try:
+            src.close()
+        except Exception:
+            pass
+        try:
+            dst.close()
+        except Exception:
+            pass
+
 
 def handle_client(client, addr):
+    ssh = None
     try:
-        client.settimeout(15)
+        client.settimeout(10)
+
+        # Leer payload HTTP/WebSocket inicial
         try:
-            first = client.recv(8192)
-        except:
-            first = ""
-        client.sendall(response_200())
-        remote = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        remote.settimeout(15)
-        remote.connect((SSH_HOST, SSH_PORT))
+            data = client.recv(BUFFER_SIZE)
+        except Exception:
+            data = b""
+
+        # Responder 200 Establish siempre que haya un payload inicial
+        if data:
+            client.sendall(RESPONSE_200)
+
+        # Conectar al SSH local
+        ssh = socket.create_connection((SSH_HOST, SSH_PORT), timeout=10)
+
+        # Si el cliente envió datos después del header, no los reenviamos como HTTP.
+        # Desde aquí empieza el túnel SSH limpio.
         client.settimeout(None)
-        remote.settimeout(None)
-        if first and not is_http_payload(first):
-            remote.sendall(first)
-        tunnel(client, remote)
-    except:
-        try: client.close()
-        except: pass
+        ssh.settimeout(None)
+
+        t1 = threading.Thread(target=pipe, args=(client, ssh), daemon=True)
+        t2 = threading.Thread(target=pipe, args=(ssh, client), daemon=True)
+
+        t1.start()
+        t2.start()
+
+        t1.join()
+        t2.join()
+
+    except Exception:
+        try:
+            client.close()
+        except Exception:
+            pass
+        try:
+            if ssh:
+                ssh.close()
+        except Exception:
+            pass
+
 
 def main():
-    print("[DarkZsaid] Socks Python Directo WS")
-    print("[DarkZsaid] 0.0.0.0:80 -> 127.0.0.1:22")
-    print("[DarkZsaid] Response: HTTP/1.1 200 Connection established " + BRAND)
+    print("DarkZsaid SSH WS Direct 200 Establish")
+    print(f"Escuchando en {LISTEN_HOST}:{LISTEN_PORT}")
+    print(f"Redirigiendo a {SSH_HOST}:{SSH_PORT}")
+
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((LISTEN_HOST, LISTEN_PORT))
     server.listen(500)
+
     while True:
         client, addr = server.accept()
-        t = threading.Thread(target=handle_client, args=(client, addr))
-        t.daemon = True
-        t.start()
+        threading.Thread(target=handle_client, args=(client, addr), daemon=True).start()
+
 
 if __name__ == "__main__":
     main()
