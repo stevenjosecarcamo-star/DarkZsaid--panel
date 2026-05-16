@@ -184,9 +184,41 @@ activar_ws80() {
 
 detener_ws80() {
     titulo
+    echo -e "${AMARILLO}Deteniendo SOCKS PYTHON DIRECTO WS / 200 Establish...${RESET}"
+    echo ""
+
     systemctl stop darkzsaid-ws80 2>/dev/null || true
+    systemctl disable darkzsaid-ws80 2>/dev/null || true
+
+    pkill -f "/opt/darkzsaid/ssh-ws-direct.py" 2>/dev/null || true
     pkill -f "ssh-ws-direct.py" 2>/dev/null || true
-    echo -e "${AMARILLO}SOCKS PYTHON DIRECTO WS detenido.${RESET}"
+    pkill -f "socks-python" 2>/dev/null || true
+    pkill -f "python.*:80" 2>/dev/null || true
+
+    sleep 1
+
+    PID80=$(lsof -ti tcp:80 2>/dev/null || true)
+    if [[ -n "$PID80" ]]; then
+        echo -e "${ROJO}Matando proceso que seguía usando puerto 80:${RESET} $PID80"
+        kill -9 $PID80 2>/dev/null || true
+    fi
+
+    echo ""
+    echo -e "${AMARILLO}Estado servicio:${RESET}"
+    systemctl is-active darkzsaid-ws80 2>/dev/null || echo "inactive"
+
+    echo ""
+    echo -e "${AMARILLO}Puerto 80:${RESET}"
+    if ss -tulnp | grep -q ':80'; then
+        ss -tulnp | grep ':80'
+        echo ""
+        echo -e "${ROJO}Todavía hay algo usando el puerto 80.${RESET}"
+    else
+        echo -e "${VERDE}Puerto 80 liberado correctamente.${RESET}"
+    fi
+
+    echo ""
+    echo -e "${VERDE}SOCKS PYTHON DIRECTO WS detenido.${RESET}"
     pausa
 }
 
