@@ -4,6 +4,7 @@ CONFIG="/etc/udpmod/config.json"
 DATA_DIR="/opt/darkzsaid/data"
 SSH_DB="$DATA_DIR/usuarios_ssh.db"
 TOKEN_DB="$DATA_DIR/tokens_zivpn.db"
+
 PORT="36712"
 OBFS="DarkZsaid"
 
@@ -21,17 +22,20 @@ TOKEN_DB = Path("/opt/darkzsaid/data/tokens_zivpn.db")
 PORT = "36712"
 OBFS = "DarkZsaid"
 
-def read_users(path):
-    users = []
+def leer_usuarios(path):
+    usuarios = []
+
     if not path.exists():
-        return users
+        return usuarios
 
     for raw in path.read_text(errors="ignore").splitlines():
         line = raw.strip()
+
         if not line or line.startswith("#"):
             continue
 
         parts = [p.strip() for p in line.split("|")]
+
         if len(parts) < 2:
             continue
 
@@ -40,17 +44,20 @@ def read_users(path):
 
         if not user or not password:
             continue
-        if "/" in user or " " in user:
+
+        if " " in user or "/" in user:
             continue
 
-        pair = f"{user}:{password}"
-        if pair not in users:
-            users.append(pair)
+        par = f"{user}:{password}"
 
-    return users
+        if par not in usuarios:
+            usuarios.append(par)
+
+    return usuarios
 
 auth_users = []
-for item in read_users(SSH_DB) + read_users(TOKEN_DB):
+
+for item in leer_usuarios(SSH_DB) + leer_usuarios(TOKEN_DB):
     if item not in auth_users:
         auth_users.append(item)
 
@@ -69,7 +76,6 @@ cfg["auth"] = {
     "config": auth_users
 }
 
-# Mantener rutas de certificados si existen, si no poner las estándar
 cfg.setdefault("cert", "/etc/udpmod/server.crt")
 cfg.setdefault("key", "/etc/udpmod/server.key")
 cfg.setdefault("alpn", "")
@@ -78,11 +84,15 @@ cfg.setdefault("down_mbps", 15)
 cfg.setdefault("disable_udp", False)
 
 CONFIG.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n")
-print(f"UDPMOD corregido: obfs={OBFS}, usuarios={len(auth_users)}")
+
+print(f"UDPMOD OK | OBFS={OBFS} | USUARIOS={len(auth_users)}")
 PY
 
 ufw allow 36712/udp >/dev/null 2>&1 || true
 ufw reload >/dev/null 2>&1 || true
 
 systemctl daemon-reload >/dev/null 2>&1 || true
-systemctl restart udpmod 2>/dev/null || true
+
+if systemctl list-unit-files | grep -q '^udpmod.service'; then
+    systemctl restart udpmod 2>/dev/null || true
+fi

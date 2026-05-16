@@ -41,7 +41,7 @@ instalar_udpmod(){
 
     chmod +x /opt/UDPMOD/* 2>/dev/null
 
-    read -p "OBFS personalizado [DarkZsaid]: " OBFS_CUSTOM
+    OBFS_CUSTOM="DarkZsaid"
     OBFS_CUSTOM="DarkZsaid"
 
     if [[ ! -f /opt/UDPMOD/udpmod.server.crt ]] || [[ ! -f /opt/UDPMOD/udpmod.server.key ]]; then
