@@ -274,6 +274,7 @@ menu_principal() {
         echo -e "${ROJO}[6]${RESET} ${CYAN}➜${RESET} ${BLANCO}BOT TELEGRAM OPCIONAL${RESET}          ${ROJO}◆${RESET}"
         echo -e "${ROJO}[7]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}"
         echo ""
+        echo -e "${ROJO}[08]${RESET} ${CYAN}➜${RESET} ${BLANCO}OPTIMIZAR / ACTUALIZAR SCRIPT${RESET}"
         echo -e "${ROJO}[99]${RESET} ${CYAN}➜${RESET} ${AMARILLO}REBOOT VPS${RESET}                  ${ROJO}⟳${RESET}"
         echo -e "${ROJO}[0]${RESET}  ${CYAN}➜${RESET} ${ROJO}SALIR${RESET}                       ${AMARILLO}↩${RESET}"
         echo ""
@@ -301,6 +302,10 @@ case "$op" in
         7|07)
             menu_banner
             ;;
+        8|08)
+            bash /opt/darkzsaid/darkzsaid-update.sh
+            ;;
+
 
 
             99) reboot ;;

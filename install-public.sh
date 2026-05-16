@@ -127,6 +127,17 @@ if [[ -f "$APP_DIR/darkzsaid-update.sh" ]]; then
 fi
 
 
+
+echo ""
+echo -e "${CYAN}Configurando optimizador/actualizador DarkZsaid...${RESET}"
+
+if [[ -f "$APP_DIR/darkzsaid-update.sh" ]]; then
+    chmod +x "$APP_DIR/darkzsaid-update.sh"
+    ln -sf "$APP_DIR/darkzsaid-update.sh" /usr/local/bin/darkzsaid-update
+    chmod +x /usr/local/bin/darkzsaid-update
+fi
+
+
 echo -e "${VERDE}${BOLD}Instalación limpia terminada correctamente.${RESET}"
 echo ""
 echo -e "${AMARILLO}Estado inicial:${RESET}"

@@ -12,13 +12,13 @@ BOLD="\e[1m"
 
 clear
 echo -e "${ROJO}════════════════════════════════════════════${RESET}"
-echo -e "${BLANCO}${BOLD}        ACTUALIZADOR DARKZSAID             ${RESET}"
+echo -e "${BLANCO}${BOLD}        OPTIMIZAR / ACTUALIZAR SCRIPT       ${RESET}"
 echo -e "${ROJO}════════════════════════════════════════════${RESET}"
 echo ""
 
 cd "$APP_DIR" || exit 1
 
-echo -e "${CYAN}Actualizando desde GitHub...${RESET}"
+echo -e "${CYAN}Actualizando archivos desde GitHub...${RESET}"
 git pull
 
 echo ""
@@ -37,14 +37,12 @@ chmod +x /usr/local/bin/menu /usr/local/bin/darkzsaid /usr/local/bin/darkzsaid-u
 echo ""
 echo -e "${CYAN}Limpiando servicios viejos del puerto 80...${RESET}"
 
-# Servicios nuevos/viejos del WS puerto 80
 for s in darkzsaid-ws80 ssh-ws socks-python-ws@80.service socks-ws socks-python socks-python-ws python-ws nginx; do
     systemctl stop "$s" 2>/dev/null || true
     systemctl disable "$s" 2>/dev/null || true
     systemctl reset-failed "$s" 2>/dev/null || true
 done
 
-# Procesos viejos/nuevos del puerto 80
 pkill -9 -f "python2 /opt/darkzsaid/ssh-ws-direct.py" 2>/dev/null || true
 pkill -9 -f "python3 /opt/darkzsaid/ssh-ws-direct.py" 2>/dev/null || true
 pkill -9 -f "ssh-ws-direct.py" 2>/dev/null || true
@@ -60,7 +58,7 @@ if [[ -n "$PIDS" ]]; then
 fi
 
 echo ""
-echo -e "${CYAN}Sincronizando UDP Hysteria...${RESET}"
+echo -e "${CYAN}Sincronizando UDP Hysteria con usuarios reales...${RESET}"
 
 if [[ -x "$APP_DIR/menus/sync_udpmod_users.sh" ]]; then
     bash "$APP_DIR/menus/sync_udpmod_users.sh" 2>/dev/null || true
@@ -113,6 +111,6 @@ else
 fi
 
 echo ""
-echo -e "${VERDE}${BOLD}Actualización terminada.${RESET}"
-echo "Ejecuta: menu"
+echo -e "${VERDE}${BOLD}Optimización y actualización terminada.${RESET}"
 echo ""
+read -p "Presiona ENTER para continuar..."
