@@ -260,32 +260,10 @@ crear_hwid() {
 }
 
 crear_token() {
-    titulo_users "CREAR CUENTA TOKEN"
-
-    leer_local usuario "TOKEN: "
-    [[ -z "$usuario" ]] && echo "Usuario vacío." && pausa_local && return
-
-    leer_local token "Token: "
-    [[ -z "$token" ]] && echo "Token vacío." && pausa_local && return
-
-    leer_local dias "Días: "
-    [[ -z "$dias" ]] && dias="1"
-
-    expira="$(fecha_expira "$dias")"
-
-    grep -v "^$usuario|" "$TOKEN_DB" 2>/dev/null > "$TOKEN_DB.tmp" || true
-    mv "$TOKEN_DB.tmp" "$TOKEN_DB" 2>/dev/null || true
-    echo "$usuario|$token|$dias|$expira" >> "$TOKEN_DB"
-
-    echo ""
-    echo -e "${VERDE}✔ Token creado correctamente.${RESET}"
-    echo ""
-    echo -e "${AMARILLO}Usuario:${RESET} $usuario"
-    echo -e "${AMARILLO}Token:${RESET} $token"
-    echo -e "${AMARILLO}Caduca:${RESET} $expira"
-    echo -e "${AMARILLO}Días:${RESET} $dias"
-
-    pausa_local
+    bash /opt/darkzsaid/menus/crear_token_oficial.sh
+    bash /opt/darkzsaid/menus/fix_udpmod_permanente.sh >/dev/null 2>&1 || true
+    echo
+    read -r -p "Presiona ENTER para continuar..."
 }
 
 menu_agregar_usuario() {
