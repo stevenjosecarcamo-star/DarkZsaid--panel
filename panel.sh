@@ -647,7 +647,7 @@ instalar_appmods() {
   "listen": ":$APP_PORT",
   "cert": "/etc/udpmod/server.crt",
   "key": "/etc/udpmod/server.key",
-  "obfs": "APPModsPLUS",
+  "obfs": "DarkZsaid",
   "auth": {
     "mode": "passwords",
     "config": ["USUARIO:CLAVE"]

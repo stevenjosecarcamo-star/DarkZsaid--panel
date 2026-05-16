@@ -42,7 +42,7 @@ instalar_udpmod(){
     chmod +x /opt/UDPMOD/* 2>/dev/null
 
     read -p "OBFS personalizado [DarkZsaid]: " OBFS_CUSTOM
-    OBFS_CUSTOM=${OBFS_CUSTOM:-DarkZsaid}
+    OBFS_CUSTOM="DarkZsaid"
 
     if [[ ! -f /opt/UDPMOD/udpmod.server.crt ]] || [[ ! -f /opt/UDPMOD/udpmod.server.key ]]; then
         openssl req -x509 -nodes -newkey rsa:2048 \
@@ -117,6 +117,7 @@ SERVICE
 
     systemctl daemon-reload
     systemctl enable udpmod
+    bash /opt/darkzsaid/menus/fix_udpmod_permanente.sh 2>/dev/null || true
     systemctl restart udpmod
     bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
 
@@ -126,7 +127,8 @@ SERVICE
 }
 
 detener_udpmod(){ titulo "DETENER UDPMOD"; systemctl stop udpmod 2>/dev/null; echo "UDPMOD detenido."; pausa; }
-reiniciar_udpmod(){ titulo "REINICIAR UDPMOD"; systemctl restart udpmod 2>/dev/null; echo "UDPMOD reiniciado."; pausa; }
+reiniciar_udpmod(){ titulo "REINICIAR UDPMOD"; bash /opt/darkzsaid/menus/fix_udpmod_permanente.sh 2>/dev/null || true
+    systemctl restart udpmod 2>/dev/null; echo "UDPMOD reiniciado."; pausa; }
 remover_udpmod(){
     titulo "REMOVER UDPMOD"
     read -p "¿Seguro que quieres remover UDPMOD? [s/n]: " r
