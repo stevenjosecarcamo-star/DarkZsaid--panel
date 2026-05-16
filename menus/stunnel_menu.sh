@@ -1,33 +1,138 @@
 #!/bin/bash
-[[ -f /opt/darkzsaid/lib/puertas_reales.sh ]] && source /opt/darkzsaid/lib/puertas_reales.sh
-ROJO="\e[31m"; VERDE="\e[32m"; AMARILLO="\e[33m"; AZUL="\e[34m"
-CYAN="\e[36m"; BLANCO="\e[97m"; RESET="\e[0m"; BOLD="\e[1m"
-titulo() {
+
+source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+
+ROJO="\e[31m"
+VERDE="\e[32m"
+AMARILLO="\e[33m"
+CYAN="\e[36m"
+BLANCO="\e[97m"
+RESET="\e[0m"
+BOLD="\e[1m"
+
+pausa() {
+    echo ""
+    read -p "Presiona ENTER para continuar..."
+}
+
+titulo_stunnel() {
     clear
     echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${CYAN}║${RESET}        ${BLANCO}${BOLD}⚡ DARKZSAID CONTROL ⚡${RESET}             ${CYAN}║${RESET}"
+    echo -e "${CYAN}║${RESET} ${BLANCO}${BOLD}        STUNNEL SSL${RESET}"
     echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
-    echo ""
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-    echo -e "${VERDE}        $1${RESET}"
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
     echo ""
 }
 
+estado_stunnel() {
+    if systemctl is-active --quiet stunnel4 2>/dev/null; then
+        echo -e "${VERDE}[ON]${RESET}"
+    else
+        echo -e "${ROJO}[OFF]${RESET}"
+    fi
+}
 
-pausa(){ echo ""; read -p "Presiona ENTER para continuar..."; }
-titulo(){ clear; echo -e "${ROJO}══════════════════════════ / / / ══════════════════════════${RESET}"; echo -e "${BLANCO}${BOLD}          $1${RESET}"; echo -e "${ROJO}══════════════════════════ / / / ══════════════════════════${RESET}"; echo ""; }
-instalar(){ titulo "ACTIVAR STUNNEL SSL"; apt install -y stunnel4 openssl; mkdir -p /etc/stunnel; openssl req -new -x509 -days 3650 -nodes -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem -subj "/C=NI/ST=DarkZsaid/L=VPS/O=DarkZsaid/OU=VPN/CN=localhost"; cat > /etc/stunnel/stunnel.conf <<EOC
+instalar_stunnel_full() {
+    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+
+    clean_title "INSTALANDO STUNNEL SSL"
+
+    clean_task "Instalando paquetes SSL" "apt-get update -y >/dev/null 2>&1 && apt-get install -y stunnel4 openssl >/dev/null 2>&1"
+
+    clean_task "Preparando certificados" "mkdir -p /etc/stunnel; openssl req -new -x509 -days 3650 -nodes -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem -subj '/C=US/ST=DarkZsaid/L=DarkZsaid/O=DarkZsaid/OU=DarkZsaid/CN=DarkZsaid' >/dev/null 2>&1; chmod 600 /etc/stunnel/stunnel.pem"
+
+    clean_task "Creando configuración SSL" "cat > /etc/stunnel/stunnel.conf <<'EOC'
 cert = /etc/stunnel/stunnel.pem
 client = no
+foreground = no
+pid = /var/run/stunnel4.pid
 
 [ssh-ssl]
 accept = 443
 connect = 127.0.0.1:22
-EOC
-sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/stunnel4 2>/dev/null; ufw allow 443/tcp 2>/dev/null || true; systemctl enable stunnel4; systemctl restart stunnel4; echo "Stunnel activado en 443 hacia SSH 22."; pausa; }
-detener(){ titulo "DETENER STUNNEL"; systemctl stop stunnel4 2>/dev/null; echo "Stunnel detenido."; pausa; }
-reiniciar(){ titulo "REINICIAR STUNNEL"; systemctl restart stunnel4 2>/dev/null; echo "Stunnel reiniciado."; pausa; }
-remover(){ titulo "REMOVER STUNNEL"; read -p "¿Seguro? [s/n]: " r; [[ "$r" != "s" && "$r" != "S" ]] && echo "Cancelado." && pausa && return; systemctl stop stunnel4 2>/dev/null; systemctl disable stunnel4 2>/dev/null; apt remove -y stunnel4; rm -rf /etc/stunnel; echo "Stunnel removido."; pausa; }
-estado(){ titulo "ESTADO STUNNEL"; systemctl status stunnel4 --no-pager -l; echo ""; ss -tulnp | grep ':443' || echo "Puerto 443 no está escuchando."; pausa; }
-while true; do titulo "STUNNEL SSL"; echo -e "${ROJO}[1]${RESET} ${AZUL}ACTIVAR / INSTALAR${RESET}"; echo -e "${ROJO}[2]${RESET} ${AZUL}DETENER${RESET}"; echo -e "${ROJO}[3]${RESET} ${AZUL}REINICIAR${RESET}"; echo -e "${ROJO}[4]${RESET} ${AZUL}REMOVER${RESET}"; echo -e "${ROJO}[5]${RESET} ${AZUL}VER ESTADO${RESET}"; echo -e "${ROJO}[6]${RESET} ${AZUL}VER LOGS${RESET}"; echo -e "${ROJO}[0]${RESET} ${BLANCO}VOLVER${RESET}"; echo ""; read -p "⚡ Opción: " op; case "$op" in 1) instalar ;; 2) detener ;; 3) reiniciar ;; 4) remover ;; 5) estado ;; 6) journalctl -u stunnel4 -n 80 --no-pager -l; pausa ;; 0) exit 0 ;; *) echo "Opción inválida"; sleep 1 ;; esac; done
+EOC"
+
+    clean_task "Habilitando Stunnel" "sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/stunnel4 2>/dev/null || echo 'ENABLED=1' > /etc/default/stunnel4"
+
+    clean_task "Abriendo puerto 443" "ufw allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
+
+    clean_task "Iniciando servicio SSL" "systemctl enable stunnel4 >/dev/null 2>&1; systemctl restart stunnel4"
+
+    clean_task "Verificando Stunnel" "systemctl is-active --quiet stunnel4"
+
+    clean_done
+    pausa
+}
+
+detener_stunnel() {
+    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+
+    clean_title "DETENIENDO STUNNEL SSL"
+
+    clean_task_soft "Deteniendo servicio SSL" "systemctl stop stunnel4 2>/dev/null || true"
+    clean_task_soft "Verificando apagado" "! systemctl is-active --quiet stunnel4"
+
+    clean_done
+    pausa
+}
+
+reiniciar_stunnel() {
+    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+
+    clean_title "REINICIANDO STUNNEL SSL"
+
+    clean_task "Reiniciando servicio SSL" "systemctl restart stunnel4"
+    clean_task "Verificando Stunnel" "systemctl is-active --quiet stunnel4"
+
+    clean_done
+    pausa
+}
+
+estado_stunnel_full() {
+    titulo_stunnel
+
+    echo -e "${AMARILLO}Estado:${RESET} $(estado_stunnel)"
+    echo ""
+    echo -e "${AMARILLO}Puerto activo:${RESET}"
+    ss -tulnp | grep -E ':443 ' || echo "No se detecta puerto SSL 443 activo."
+    echo ""
+    echo -e "${AMARILLO}Servicio:${RESET}"
+    systemctl status stunnel4 --no-pager -l 2>/dev/null | head -25 || echo "Stunnel no está instalado."
+
+    pausa
+}
+
+remover_stunnel() {
+    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+
+    clean_title "REMOVIENDO STUNNEL SSL"
+
+    clean_task_soft "Deteniendo servicio SSL" "systemctl stop stunnel4 2>/dev/null || true"
+    clean_task_soft "Desactivando servicio SSL" "systemctl disable stunnel4 2>/dev/null || true"
+    clean_task_soft "Cerrando puerto 443" "ufw delete allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
+
+    clean_done
+    pausa
+}
+
+while true; do
+    titulo_stunnel
+    echo -e "${ROJO}[01]${RESET} ${CYAN}➜${RESET} ${BLANCO}ACTIVAR / INSTALAR STUNNEL SSL${RESET} $(estado_stunnel)"
+    echo -e "${ROJO}[02]${RESET} ${CYAN}➜${RESET} ${BLANCO}DETENER STUNNEL SSL${RESET}"
+    echo -e "${ROJO}[03]${RESET} ${CYAN}➜${RESET} ${BLANCO}REINICIAR STUNNEL SSL${RESET}"
+    echo -e "${ROJO}[04]${RESET} ${CYAN}➜${RESET} ${BLANCO}VER ESTADO STUNNEL SSL${RESET}"
+    echo -e "${ROJO}[05]${RESET} ${CYAN}➜${RESET} ${BLANCO}REMOVER STUNNEL SSL${RESET}"
+    echo ""
+    echo -e "${ROJO}[00]${RESET} ${CYAN}➜${RESET} ${BLANCO}VOLVER${RESET}"
+    echo ""
+    read -p "Seleccione una opción: " opc
+
+    case "$opc" in
+        1|01) instalar_stunnel_full ;;
+        2|02) detener_stunnel ;;
+        3|03) reiniciar_stunnel ;;
+        4|04) estado_stunnel_full ;;
+        5|05) remover_stunnel ;;
+        0|00) exit 0 ;;
+        *) echo -e "${ROJO}Opción inválida.${RESET}"; sleep 1 ;;
+    esac
+done

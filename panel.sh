@@ -297,10 +297,10 @@ case "$op" in
             bash /opt/darkzsaid/socks_ws_menu.sh
             ;;
         6|06)
-            menu_bot
+            bash /opt/darkzsaid/menus/dropbear_menu.sh
             ;;
         7|07)
-            menu_banner
+            bash /opt/darkzsaid/menus/stunnel_menu.sh
             ;;
         8|08)
             bash /opt/darkzsaid/darkzsaid-update.sh
@@ -1153,54 +1153,14 @@ instalar_base_socks_python_ws_silencioso() {
 }
 
 instalar_dropbear() {
-    titulo "INSTALAR DROPBEAR"
-
-    apt install -y dropbear
-
-    sed -i 's/^NO_START=.*/NO_START=0/' /etc/default/dropbear 2>/dev/null
-    sed -i 's/^DROPBEAR_PORT=.*/DROPBEAR_PORT=442/' /etc/default/dropbear 2>/dev/null
-
-    if ! grep -q "^DROPBEAR_PORT=" /etc/default/dropbear; then
-        echo "DROPBEAR_PORT=442" >> /etc/default/dropbear
-    fi
-
-    ufw allow 442/tcp
-    systemctl enable dropbear
-    systemctl restart dropbear
-
-    echo "Dropbear instalado en puerto 442."
-    pausa
+    bash /opt/darkzsaid/menus/dropbear_menu.sh
 }
+
 
 instalar_stunnel() {
-    titulo "INSTALAR STUNNEL SSL"
-
-    apt install -y stunnel4 openssl
-    mkdir -p /etc/stunnel
-
-    openssl req -new -x509 -days 3650 -nodes \
-        -out /etc/stunnel/stunnel.pem \
-        -keyout /etc/stunnel/stunnel.pem \
-        -subj "/C=NI/ST=DarkZsaid/L=VPS/O=DarkZsaid/OU=VPN/CN=localhost"
-
-    cat > /etc/stunnel/stunnel.conf <<EOC
-cert = /etc/stunnel/stunnel.pem
-client = no
-
-[ssh-ssl]
-accept = 443
-connect = 127.0.0.1:22
-EOC
-
-    sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/stunnel4 2>/dev/null
-
-    ufw allow 443/tcp
-    systemctl enable stunnel4
-    systemctl restart stunnel4
-
-    echo "Stunnel instalado en puerto 443 hacia SSH 22."
-    pausa
+    bash /opt/darkzsaid/menus/stunnel_menu.sh
 }
+
 
 instalar_badvpn() {
     titulo "INSTALAR BADVPN UDPGW"
