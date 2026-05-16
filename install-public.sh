@@ -1,3 +1,15 @@
+
+mkdir -p /opt/darkzsaid/lib /opt/darkzsaid/logs 2>/dev/null || true
+
+if [[ -f /opt/darkzsaid/lib/install_clean.sh ]]; then
+    source /opt/darkzsaid/lib/install_clean.sh
+else
+    clean_title(){ clear; echo "$1"; echo ""; }
+    clean_task(){ echo "$1"; bash -c "$2" >/dev/null 2>&1; }
+    clean_task_soft(){ echo "$1"; bash -c "$2" >/dev/null 2>&1 || true; }
+    clean_done(){ echo "Proceso completado."; }
+fi
+
 #!/bin/bash
 
 clear
@@ -86,7 +98,7 @@ echo -e "${VERDE}Limpieza inicial aplicada. Solo SSH 22 queda permitido por defe
 echo ""
 echo -e "${CYAN}Descargando DarkZsaid Panel limpio...${RESET}"
 
-git clone "$REPO_URL" "$APP_DIR"
+git clone --quiet "$REPO_URL" "$APP_DIR"
 
 if [[ ! -d "$APP_DIR" ]]; then
     echo -e "${ROJO}Error: no se pudo clonar el repositorio.${RESET}"

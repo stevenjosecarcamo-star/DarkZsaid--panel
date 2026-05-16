@@ -3,6 +3,7 @@
 ROJO="\e[31m"
 VERDE="\e[32m"
 AMARILLO="\e[33m"
+AZUL="\e[34m"
 CYAN="\e[36m"
 BLANCO="\e[97m"
 RESET="\e[0m"
@@ -40,6 +41,7 @@ import threading
 
 LISTEN_HOST = "0.0.0.0"
 LISTEN_PORT = 80
+
 SSH_HOST = "127.0.0.1"
 SSH_PORT = 22
 
@@ -76,6 +78,7 @@ def handle_client(client, addr):
     ssh = None
     try:
         client.settimeout(10)
+
         try:
             data = client.recv(BUFFER_SIZE)
         except Exception:
@@ -111,6 +114,9 @@ def handle_client(client, addr):
 
 def main():
     print("DarkZsaid SSH WS Direct 200 Establish ADM SJCC")
+    print(f"Escuchando en {LISTEN_HOST}:{LISTEN_PORT}")
+    print(f"Redirigiendo a {SSH_HOST}:{SSH_PORT}")
+
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((LISTEN_HOST, LISTEN_PORT))
@@ -149,80 +155,44 @@ systemctl enable darkzsaid-ws80 >/dev/null 2>&1
 }
 
 activar_ws80() {
-    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
+    titulo
+    echo -e "${CYAN}Activando SOCKS PYTHON DIRECTO WS con 200 Establish ADM SJCC...${RESET}"
+    echo ""
 
-    clean_title "INSTALANDO SOCKS PYTHON DIRECTO WS"
+    crear_script_ws80
+    crear_servicio_ws80
 
-    clean_task "Preparando archivo 200 Establish" "chmod +x /opt/darkzsaid/ssh-ws-direct.py"
+    systemctl stop nginx 2>/dev/null || true
+    systemctl disable nginx 2>/dev/null || true
 
-    clean_task "Creando servicio WebSocket 80" "cat > /etc/systemd/system/darkzsaid-ws80.service <<'EOSERVICE'
-[Unit]
-Description=DarkZsaid SSH WS Direct 200 Establish ADM SJCC
-After=network.target ssh.service
+    pkill -f "socks-python" 2>/dev/null || true
+    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
 
-[Service]
-Type=simple
-ExecStart=/usr/bin/python3 /opt/darkzsaid/ssh-ws-direct.py
-Restart=always
-RestartSec=3
-User=root
+    ufw allow 80/tcp 2>/dev/null || true
+    ufw reload 2>/dev/null || true
 
-[Install]
-WantedBy=multi-user.target
-EOSERVICE"
+    systemctl restart darkzsaid-ws80
 
-    clean_task_soft "Limpiando servicios antiguos" "source /opt/darkzsaid/lib/install_clean.sh && clean_kill_port80"
+    sleep 2
 
-    clean_task "Abriendo puerto 80" "ufw allow 80/tcp 2>/dev/null || true; ufw reload 2>/dev/null || true"
+    echo -e "${AMARILLO}Estado:${RESET} $(estado_ws80)"
+    echo ""
+    echo -e "${AMARILLO}Puerto 80:${RESET}"
+    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
 
-    clean_task "Iniciando servicio WebSocket" "systemctl daemon-reload; systemctl enable darkzsaid-ws80 >/dev/null 2>&1; systemctl restart darkzsaid-ws80"
+    echo ""
+    echo -e "${AMARILLO}Respuesta:${RESET}"
+    echo -e "GET / HTTP/1.1\r\nHost: test\r\n\r\n" | nc -w 2 127.0.0.1 80 2>/dev/null || true
 
-    clean_task "Verificando respuesta 200 Establish" "sleep 2; printf 'GET / HTTP/1.1
-Host: test
-
-' | nc -w 2 127.0.0.1 80 | grep -q '200 Connection established'"
-
-    clean_done
-    read -p "Presiona ENTER para continuar..."
+    echo ""
+    echo -e "${VERDE}Método activado correctamente.${RESET}"
+    pausa
 }
 
 detener_ws80() {
     titulo
-    echo -e "${AMARILLO}Deteniendo SOCKS PYTHON DIRECTO WS / 200 Establish...${RESET}"
-    echo ""
-
     systemctl stop darkzsaid-ws80 2>/dev/null || true
-    systemctl disable darkzsaid-ws80 2>/dev/null || true
-
-    pkill -f "/opt/darkzsaid/ssh-ws-direct.py" 2>/dev/null || true
-    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
-    pkill -f "socks-python" 2>/dev/null || true
-    pkill -f "python.*:80" 2>/dev/null || true
-
-    sleep 1
-
-    PID80=$(lsof -ti tcp:80 2>/dev/null || true)
-    if [[ -n "$PID80" ]]; then
-        echo -e "${ROJO}Matando proceso que seguía usando puerto 80:${RESET} $PID80"
-        kill -9 $PID80 2>/dev/null || true
-    fi
-
-    echo ""
-    echo -e "${AMARILLO}Estado servicio:${RESET}"
-    systemctl is-active darkzsaid-ws80 2>/dev/null || echo "inactive"
-
-    echo ""
-    echo -e "${AMARILLO}Puerto 80:${RESET}"
-    if ss -tulnp | grep -q ':80'; then
-        ss -tulnp | grep ':80'
-        echo ""
-        echo -e "${ROJO}Todavía hay algo usando el puerto 80.${RESET}"
-    else
-        echo -e "${VERDE}Puerto 80 liberado correctamente.${RESET}"
-    fi
-
-    echo ""
-    echo -e "${VERDE}SOCKS PYTHON DIRECTO WS detenido.${RESET}"
+    echo -e "${AMARILLO}SOCKS PYTHON DIRECTO WS detenido.${RESET}"
     pausa
 }
 
@@ -260,7 +230,7 @@ while true; do
     echo ""
     echo -e "${ROJO}[00]${RESET} ${CYAN}➜${RESET} ${BLANCO}VOLVER${RESET}"
     echo ""
-    read -p "Seleccione una opción: " opc
+    read -p "Opción: " opc
 
     case "$opc" in
         1|01) activar_ws80 ;;

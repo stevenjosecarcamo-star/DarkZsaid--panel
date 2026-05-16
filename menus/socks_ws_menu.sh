@@ -149,37 +149,41 @@ systemctl enable darkzsaid-ws80 >/dev/null 2>&1
 }
 
 activar_ws80() {
-    titulo
-    echo -e "${CYAN}Activando método 200 Establish ADM SJCC en puerto 80...${RESET}"
-    echo ""
+    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
 
-    crear_script_ws80
-    crear_servicio_ws80
+    clean_title "INSTALANDO SOCKS PYTHON DIRECTO WS"
 
-    systemctl stop nginx 2>/dev/null || true
-    systemctl disable nginx 2>/dev/null || true
+    clean_task "Preparando archivo 200 Establish" "chmod +x /opt/darkzsaid/ssh-ws-direct.py"
 
-    pkill -f "socks-python" 2>/dev/null || true
-    pkill -f "ssh-ws-direct.py" 2>/dev/null || true
+    clean_task "Creando servicio WebSocket 80" "cat > /etc/systemd/system/darkzsaid-ws80.service <<'EOSERVICE'
+[Unit]
+Description=DarkZsaid SSH WS Direct 200 Establish ADM SJCC
+After=network.target ssh.service
 
-    ufw allow 80/tcp 2>/dev/null || true
-    ufw reload 2>/dev/null || true
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/darkzsaid/ssh-ws-direct.py
+Restart=always
+RestartSec=3
+User=root
 
-    systemctl restart darkzsaid-ws80
-    sleep 2
+[Install]
+WantedBy=multi-user.target
+EOSERVICE"
 
-    echo -e "${AMARILLO}Estado:${RESET} $(estado_ws80)"
-    echo ""
-    echo -e "${AMARILLO}Puerto 80:${RESET}"
-    ss -tulnp | grep ':80' || echo "Puerto 80 no aparece activo."
+    clean_task_soft "Limpiando servicios antiguos" "source /opt/darkzsaid/lib/install_clean.sh && clean_kill_port80"
 
-    echo ""
-    echo -e "${AMARILLO}Respuesta:${RESET}"
-    echo -e "GET / HTTP/1.1\r\nHost: test\r\n\r\n" | nc -w 2 127.0.0.1 80 2>/dev/null || true
+    clean_task "Abriendo puerto 80" "ufw allow 80/tcp 2>/dev/null || true; ufw reload 2>/dev/null || true"
 
-    echo ""
-    echo -e "${VERDE}Método activado correctamente.${RESET}"
-    pausa
+    clean_task "Iniciando servicio WebSocket" "systemctl daemon-reload; systemctl enable darkzsaid-ws80 >/dev/null 2>&1; systemctl restart darkzsaid-ws80"
+
+    clean_task "Verificando respuesta 200 Establish" "sleep 2; printf 'GET / HTTP/1.1
+Host: test
+
+' | nc -w 2 127.0.0.1 80 | grep -q '200 Connection established'"
+
+    clean_done
+    read -p "Presiona ENTER para continuar..."
 }
 
 detener_ws80() {
