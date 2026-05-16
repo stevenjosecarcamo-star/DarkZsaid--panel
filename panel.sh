@@ -461,7 +461,7 @@ abrir_puertos_recomendados() {
     ufw allow 7300/udp
     ufw allow 36712/udp
     ufw allow 5667/udp
-    ufw allow 10000:65000/udp
+    ufw allow 20000:39999/udp
     ufw --force enable
 
     echo "Puertos abiertos:"
@@ -474,7 +474,7 @@ abrir_puertos_recomendados() {
     echo "7300/udp BadVPN"
     echo "36712/udp UDP-Hysteria APPmod's"
     echo "5667/udp ZiVPN"
-    echo "10000:65000/udp rango UDP"
+    echo "20000:39999/udp rango UDP"
     echo ""
     ufw status numbered
     pausa
@@ -513,14 +513,14 @@ estado_limpio_udpm() {
     echo -e "${CYAN}Puerto:${RESET} 36712 UDP"
     echo -e "${CYAN}UDP:${RESET} Original"
     echo -e "${CYAN}Hysteria Obfuscation:${RESET} $OBFS_ACTUAL"
-    echo -e "${CYAN}Rango:${RESET} 10000-65000"
+    echo -e "${CYAN}Rango:${RESET} 20000-39999"
     echo -e "${CYAN}ALPN:${RESET} $ALPN_ACTUAL"
     echo ""
     echo -e "${AMARILLO}Datos para la app:${RESET}"
     echo "Servidor UDP/IP: $IP"
     echo "Puerto: 36712"
     echo "Hysteria Obfuscation: $OBFS_ACTUAL"
-    echo "Rango: 10000-65000"
+    echo "Rango: 20000-39999"
     echo ""
     pausa
 }
@@ -702,7 +702,7 @@ datos_appmods() {
     echo -e "${VERDE}Servidor UDP/IP:${RESET} $IP"
     echo -e "${VERDE}Puerto:${RESET} 36712"
     echo -e "${VERDE}Hysteria Obfuscation:${RESET} $OBFS_ACTUAL"
-    echo -e "${VERDE}Rango:${RESET} 10000-65000"
+    echo -e "${VERDE}Rango:${RESET} 20000-39999"
     echo ""
     echo -e "${AMARILLO}Autenticación:${RESET}"
     echo "Usa el usuario SSH creado en:"
@@ -1241,7 +1241,7 @@ menu_puertos() {
                 pausa
                 ;;
             5)
-                read -p "Rango UDP, ejemplo 10000:65000: " rango
+                read -p "Rango UDP, ejemplo 20000:39999: " rango
                 ufw allow "$rango"/udp
                 pausa
                 ;;

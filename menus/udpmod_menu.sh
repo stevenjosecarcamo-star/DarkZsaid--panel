@@ -108,11 +108,11 @@ SERVICE
 
     ufw allow 22/tcp 2>/dev/null || true
     ufw allow 36712/udp 2>/dev/null || true
-    ufw allow 10000:65000/udp 2>/dev/null || true
+    ufw allow 20000:39999/udp 2>/dev/null || true
     ufw --force enable 2>/dev/null || true
 
-    iptables -t nat -D PREROUTING -p udp --dport 10000:65000 -j REDIRECT --to-ports 36712 2>/dev/null
-    iptables -t nat -A PREROUTING -p udp --dport 10000:65000 -j REDIRECT --to-ports 36712
+    iptables -t nat -D PREROUTING -p udp --dport 20000:39999 -j REDIRECT --to-ports 36712 2>/dev/null
+    iptables -t nat -A PREROUTING -p udp --dport 20000:39999 -j REDIRECT --to-ports 36712
     netfilter-persistent save 2>/dev/null || true
 
     systemctl daemon-reload

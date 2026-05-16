@@ -96,3 +96,8 @@ systemctl daemon-reload >/dev/null 2>&1 || true
 if systemctl list-unit-files | grep -q '^udpmod.service'; then
     systemctl restart udpmod 2>/dev/null || true
 fi
+
+# Reparar redirección de rangos UDP hacia puerto principal
+if [[ -x /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh ]]; then
+  bash /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh >/dev/null 2>&1 || true
+fi

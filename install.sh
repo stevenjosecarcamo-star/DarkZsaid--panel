@@ -52,7 +52,7 @@ cat > "$APP_DIR/config.env" <<EOC
 APP_DOMAIN="$IP_ACTUAL"
 APP_PORT="36712"
 APP_OBFS="DarkZsaid"
-APP_RANGE="10000:65000"
+APP_RANGE="20000:39999"
 EOC
 
 chmod 600 "$APP_DIR/config.env"
@@ -145,3 +145,8 @@ echo ""
 echo -e "${AMARILLO}Abre el panel con:${RESET}"
 echo "menu"
 echo ""
+
+# Aplicar rangos UDP DarkZsaid permanentes
+if [[ -x /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh ]]; then
+  bash /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh >/dev/null 2>&1 || true
+fi
