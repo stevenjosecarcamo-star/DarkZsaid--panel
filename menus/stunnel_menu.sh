@@ -1,197 +1,112 @@
 #!/bin/bash
 
-source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
-
 ROJO="\e[31m"
 VERDE="\e[32m"
 AMARILLO="\e[33m"
 CYAN="\e[36m"
+AZUL="\e[34m"
 BLANCO="\e[97m"
 RESET="\e[0m"
 BOLD="\e[1m"
 
+FIX="/opt/darkzsaid/menus/fix_stunnel_permanente.sh"
+
 pausa() {
-    echo ""
-    read -p "Presiona ENTER para continuar..."
+  echo
+  read -r -p "Presiona ENTER para continuar..."
 }
 
 titulo_stunnel() {
-    clear
-    echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${CYAN}║${RESET} ${BLANCO}${BOLD}        STUNNEL SSL${RESET}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
-    echo ""
+  clear
+  echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
+  echo -e "${CYAN}║${RESET} ${BLANCO}${BOLD}          DARKZSAID STUNNEL SSL 443          ${RESET}${CYAN}║${RESET}"
+  echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
+  echo
+}
+
+instalar_stunnel() {
+  titulo_stunnel
+  echo -e "${AMARILLO}Instalando/Reparando Stunnel SSL...${RESET}"
+  echo
+  bash "$FIX"
+  pausa
 }
 
 estado_stunnel() {
-    if systemctl is-active --quiet darkzsaid-stunnel 2>/dev/null; then
-        echo -e "${VERDE}[ON]${RESET}"
-    else
-        echo -e "${ROJO}[OFF]${RESET}"
-    fi
-}
-
-instalar_stunnel_full() {
-    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
-
-    clean_title "INSTALANDO STUNNEL SSL"
-
-    clean_task "Instalando paquetes SSL" "apt-get update -y >/dev/null 2>&1 && apt-get install -y darkzsaid-stunnel openssl >/dev/null 2>&1"
-
-    clean_task "Preparando certificados" "mkdir -p /etc/stunnel; openssl req -new -x509 -days 3650 -nodes -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem -subj '/C=US/ST=DarkZsaid/L=DarkZsaid/O=DarkZsaid/OU=DarkZsaid/CN=DarkZsaid' >/dev/null 2>&1; chmod 600 /etc/stunnel/stunnel.pem"
-
-    clean_task "Creando configuración SSL" "cat > /etc/stunnel/stunnel.conf <<'EOC'
-cert = /etc/stunnel/stunnel.pem
-client = no
-foreground = no
-pid = /var/run/darkzsaid-stunnel.pid
-
-[ssh-ssl]
-accept = 443
-connect = 127.0.0.1:22
-EOC"
-
-    clean_task "Habilitando Stunnel" "sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/darkzsaid-stunnel 2>/dev/null || echo 'ENABLED=1' > /etc/default/darkzsaid-stunnel"
-
-    clean_task "Abriendo puerto 443" "ufw allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
-
-    clean_task "Iniciando servicio SSL" "systemctl enable darkzsaid-stunnel >/dev/null 2>&1; systemctl restart darkzsaid-stunnel"
-
-    clean_task "Verificando Stunnel" "systemctl is-active --quiet darkzsaid-stunnel"
-
-    clean_done
-    pausa
-}
-
-detener_stunnel() {
-    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
-
-    clean_title "DETENIENDO STUNNEL SSL"
-
-    clean_task_soft "Deteniendo servicio SSL" "systemctl stop darkzsaid-stunnel 2>/dev/null || true"
-    clean_task_soft "Verificando apagado" "! systemctl is-active --quiet darkzsaid-stunnel"
-
-    clean_done
-    pausa
+  titulo_stunnel
+  echo -e "${AMARILLO}Estado del servicio darkzsaid-stunnel:${RESET}"
+  echo
+  systemctl status darkzsaid-stunnel --no-pager 2>/dev/null || echo -e "${ROJO}Servicio no encontrado.${RESET}"
+  echo
+  echo -e "${AMARILLO}Puerto 443:${RESET}"
+  ss -tulnp | grep ':443' || echo -e "${ROJO}443 no está escuchando.${RESET}"
+  pausa
 }
 
 reiniciar_stunnel() {
-    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
-
-    clean_title "REINICIANDO STUNNEL SSL"
-
-    clean_task "Reiniciando servicio SSL" "systemctl restart darkzsaid-stunnel"
-    clean_task "Verificando Stunnel" "systemctl is-active --quiet darkzsaid-stunnel"
-
-    clean_done
-    pausa
+  titulo_stunnel
+  echo -e "${AMARILLO}Reiniciando Stunnel SSL...${RESET}"
+  systemctl restart darkzsaid-stunnel 2>/dev/null || bash "$FIX"
+  sleep 1
+  systemctl status darkzsaid-stunnel --no-pager 2>/dev/null || true
+  ss -tulnp | grep ':443' || echo -e "${ROJO}443 no está escuchando.${RESET}"
+  pausa
 }
 
-estado_stunnel_full() {
-    titulo_stunnel
-
-    echo -e "${AMARILLO}Estado:${RESET} $(estado_stunnel)"
-    echo ""
-    echo -e "${AMARILLO}Puerto activo:${RESET}"
-    ss -tulnp | grep -E ':443 ' || echo "No se detecta puerto SSL 443 activo."
-    echo ""
-    echo -e "${AMARILLO}Servicio:${RESET}"
-    systemctl status darkzsaid-stunnel --no-pager -l 2>/dev/null | head -25 || echo "Stunnel no está instalado."
-
-    pausa
+detener_stunnel() {
+  titulo_stunnel
+  echo -e "${AMARILLO}Deteniendo Stunnel SSL...${RESET}"
+  systemctl stop darkzsaid-stunnel 2>/dev/null || true
+  echo -e "${VERDE}Stunnel detenido.${RESET}"
+  pausa
 }
 
 remover_stunnel() {
-    source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
-
-    clean_title "REMOVIENDO STUNNEL SSL"
-
-    clean_task_soft "Deteniendo servicio SSL" "systemctl stop darkzsaid-stunnel 2>/dev/null || true"
-    clean_task_soft "Desactivando servicio SSL" "systemctl disable darkzsaid-stunnel 2>/dev/null || true"
-    clean_task_soft "Cerrando puerto 443" "ufw delete allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
-
-    clean_done
-    pausa
+  titulo_stunnel
+  echo -e "${ROJO}Removiendo servicio Stunnel DarkZsaid...${RESET}"
+  systemctl stop darkzsaid-stunnel 2>/dev/null || true
+  systemctl disable darkzsaid-stunnel 2>/dev/null || true
+  rm -f /etc/systemd/system/darkzsaid-stunnel.service
+  rm -rf /etc/darkzsaid/stunnel
+  systemctl daemon-reload
+  echo -e "${VERDE}Stunnel removido.${RESET}"
+  pausa
 }
 
 while true; do
-    titulo_stunnel
-    echo -e "${ROJO}[01]${RESET} ${CYAN}➜${RESET} ${BLANCO}ACTIVAR / INSTALAR STUNNEL SSL${RESET} $(estado_stunnel)"
-    echo -e "${ROJO}[02]${RESET} ${CYAN}➜${RESET} ${BLANCO}DETENER STUNNEL SSL${RESET}"
-    echo -e "${ROJO}[03]${RESET} ${CYAN}➜${RESET} ${BLANCO}REINICIAR STUNNEL SSL${RESET}"
-    echo -e "${ROJO}[04]${RESET} ${CYAN}➜${RESET} ${BLANCO}VER ESTADO STUNNEL SSL${RESET}"
-    echo -e "${ROJO}[05]${RESET} ${CYAN}➜${RESET} ${BLANCO}REMOVER STUNNEL SSL${RESET}"
-    echo ""
-    echo -e "${ROJO}[00]${RESET} ${CYAN}➜${RESET} ${BLANCO}VOLVER${RESET}"
-    echo ""
-    read -p "Seleccione una opción: " opc
+  titulo_stunnel
 
-    case "$opc" in
-        1|01) instalar_stunnel_full ;;
-        2|02) detener_stunnel ;;
-        3|03) reiniciar_stunnel ;;
-        4|04) estado_stunnel_full ;;
-        5|05) remover_stunnel ;;
-        0|00) exit 0 ;;
-        *) echo -e "${ROJO}Opción inválida.${RESET}"; sleep 1 ;;
-    esac
+  if systemctl is-active --quiet darkzsaid-stunnel; then
+    ESTADO="${VERDE}ACTIVO${RESET}"
+  else
+    ESTADO="${ROJO}INACTIVO${RESET}"
+  fi
+
+  if ss -tulnp | grep -q ':443'; then
+    PUERTO="${VERDE}443 escuchando${RESET}"
+  else
+    PUERTO="${ROJO}443 no escuchando${RESET}"
+  fi
+
+  echo -e "${AMARILLO}Estado:${RESET} $ESTADO"
+  echo -e "${AMARILLO}Puerto:${RESET} $PUERTO"
+  echo
+  echo -e "${CYAN}[1]${RESET} Instalar / Reparar Stunnel SSL"
+  echo -e "${CYAN}[2]${RESET} Estado"
+  echo -e "${CYAN}[3]${RESET} Reiniciar"
+  echo -e "${CYAN}[4]${RESET} Detener"
+  echo -e "${CYAN}[5]${RESET} Remover"
+  echo -e "${CYAN}[0]${RESET} Volver"
+  echo
+  read -r -p "Opción: " op
+
+  case "$op" in
+    1) instalar_stunnel ;;
+    2) estado_stunnel ;;
+    3) reiniciar_stunnel ;;
+    4) detener_stunnel ;;
+    5) remover_stunnel ;;
+    0) exit 0 ;;
+    *) echo -e "${ROJO}Opción inválida.${RESET}"; sleep 1 ;;
+  esac
 done
-
-
-reparar_ssl_darkzsaid() {
-    systemctl stop stunnel4 2>/dev/null || true
-    systemctl disable stunnel4 2>/dev/null || true
-    systemctl reset-failed stunnel4 2>/dev/null || true
-
-    systemctl stop darkzsaid-stunnel 2>/dev/null || true
-    pkill -9 -f "stunnel" 2>/dev/null || true
-
-    PID443=$(ss -ltnp 2>/dev/null | awk '/:443 / {print $NF}' | grep -oP 'pid=\K[0-9]+' | sort -u)
-    [[ -n "$PID443" ]] && kill -9 $PID443 2>/dev/null || true
-
-    apt-get update -y >/dev/null 2>&1
-    apt-get install -y stunnel4 openssl >/dev/null 2>&1
-
-    mkdir -p /etc/stunnel
-
-    openssl req -new -x509 -days 3650 -nodes \
-        -out /etc/stunnel/stunnel.pem \
-        -keyout /etc/stunnel/stunnel.pem \
-        -subj "/C=US/ST=DarkZsaid/L=DarkZsaid/O=DarkZsaid/OU=DarkZsaid/CN=DarkZsaid" >/dev/null 2>&1
-
-    chmod 600 /etc/stunnel/stunnel.pem
-
-    cat > /etc/stunnel/darkzsaid.conf <<'EOFSSL'
-cert = /etc/stunnel/stunnel.pem
-client = no
-foreground = yes
-pid = /run/darkzsaid-stunnel.pid
-
-[ssh-ssl]
-accept = 0.0.0.0:443
-connect = 127.0.0.1:22
-EOFSSL
-
-    cat > /etc/systemd/system/darkzsaid-stunnel.service <<'EOFSERVICE'
-[Unit]
-Description=DarkZsaid Stunnel SSL 443
-After=network.target ssh.service
-
-[Service]
-Type=simple
-ExecStart=/usr/bin/stunnel4 /etc/stunnel/darkzsaid.conf
-Restart=always
-RestartSec=3
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOFSERVICE
-
-    ufw allow 443/tcp >/dev/null 2>&1 || true
-    ufw reload >/dev/null 2>&1 || true
-
-    systemctl daemon-reload
-    systemctl enable darkzsaid-stunnel >/dev/null 2>&1
-    systemctl restart darkzsaid-stunnel
-}
