@@ -122,6 +122,8 @@ for file in ["/opt/darkzsaid/data/usuarios_ssh.db", "/opt/darkzsaid/data/tokens_
     p.write_text("\n".join(out) + ("\n" if out else ""))
 PY
 
+    bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
+
     echo -e "${VERDE}Usuario eliminado:${RESET} $usuario"
 }
 
@@ -219,6 +221,8 @@ opcion_borrar_todo() {
     rm -f "$USERDIR"/* 2>/dev/null || true
 
     echo ""
+    bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
+
     echo -e "${VERDE}Todos los usuarios registrados fueron eliminados.${RESET}"
     echo ""
     read -p "Presiona ENTER para continuar..."

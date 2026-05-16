@@ -1184,6 +1184,7 @@ crear_usuario_linux() {
 
     if [[ -n "$expira" ]]; then
         chage -E "$expira" "$usuario" >/dev/null 2>&1 || true
+    bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
     fi
 
     return 0
