@@ -24,7 +24,7 @@ titulo_stunnel() {
 }
 
 estado_stunnel() {
-    if systemctl is-active --quiet stunnel4 2>/dev/null; then
+    if systemctl is-active --quiet darkzsaid-stunnel 2>/dev/null; then
         echo -e "${VERDE}[ON]${RESET}"
     else
         echo -e "${ROJO}[OFF]${RESET}"
@@ -55,9 +55,9 @@ EOC"
 
     clean_task "Abriendo puerto 443" "ufw allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
 
-    clean_task "Iniciando servicio SSL" "systemctl enable stunnel4 >/dev/null 2>&1; systemctl restart stunnel4"
+    clean_task "Iniciando servicio SSL" "systemctl enable darkzsaid-stunnel >/dev/null 2>&1; systemctl restart darkzsaid-stunnel"
 
-    clean_task "Verificando Stunnel" "systemctl is-active --quiet stunnel4"
+    clean_task "Verificando Stunnel" "systemctl is-active --quiet darkzsaid-stunnel"
 
     clean_done
     pausa
@@ -68,8 +68,8 @@ detener_stunnel() {
 
     clean_title "DETENIENDO STUNNEL SSL"
 
-    clean_task_soft "Deteniendo servicio SSL" "systemctl stop stunnel4 2>/dev/null || true"
-    clean_task_soft "Verificando apagado" "! systemctl is-active --quiet stunnel4"
+    clean_task_soft "Deteniendo servicio SSL" "systemctl stop darkzsaid-stunnel 2>/dev/null || true"
+    clean_task_soft "Verificando apagado" "! systemctl is-active --quiet darkzsaid-stunnel"
 
     clean_done
     pausa
@@ -80,8 +80,8 @@ reiniciar_stunnel() {
 
     clean_title "REINICIANDO STUNNEL SSL"
 
-    clean_task "Reiniciando servicio SSL" "systemctl restart stunnel4"
-    clean_task "Verificando Stunnel" "systemctl is-active --quiet stunnel4"
+    clean_task "Reiniciando servicio SSL" "systemctl restart darkzsaid-stunnel"
+    clean_task "Verificando Stunnel" "systemctl is-active --quiet darkzsaid-stunnel"
 
     clean_done
     pausa
@@ -96,7 +96,7 @@ estado_stunnel_full() {
     ss -tulnp | grep -E ':443 ' || echo "No se detecta puerto SSL 443 activo."
     echo ""
     echo -e "${AMARILLO}Servicio:${RESET}"
-    systemctl status stunnel4 --no-pager -l 2>/dev/null | head -25 || echo "Stunnel no está instalado."
+    systemctl status darkzsaid-stunnel --no-pager -l 2>/dev/null | head -25 || echo "Stunnel no está instalado."
 
     pausa
 }
@@ -106,8 +106,8 @@ remover_stunnel() {
 
     clean_title "REMOVIENDO STUNNEL SSL"
 
-    clean_task_soft "Deteniendo servicio SSL" "systemctl stop stunnel4 2>/dev/null || true"
-    clean_task_soft "Desactivando servicio SSL" "systemctl disable stunnel4 2>/dev/null || true"
+    clean_task_soft "Deteniendo servicio SSL" "systemctl stop darkzsaid-stunnel 2>/dev/null || true"
+    clean_task_soft "Desactivando servicio SSL" "systemctl disable darkzsaid-stunnel 2>/dev/null || true"
     clean_task_soft "Cerrando puerto 443" "ufw delete allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
 
     clean_done

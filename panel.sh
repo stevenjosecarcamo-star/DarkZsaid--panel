@@ -95,15 +95,13 @@ mostrar_puertas_activas_panel() {
         ACTIVOS=1
     fi
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:442[[:space:]]|:442$)'; then
+    if systemctl is-active --quiet dropbear 2>/dev/null || ss -tulnp 2>/dev/null | grep -qE ":(109|143)[[:space:]]"; then
         if [[ -n "$LINEA3" ]]; then
-            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}442${RESET}"
+            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}109/143${RESET}"
         else
-            LINEA3="◦ DROPBEAR: ${VERDE}442${RESET}"
+            LINEA3="◦ DROPBEAR: ${VERDE}109/143${RESET}"
         fi
-        ACTIVOS=1
     fi
-
     # ZIVPN_REAL_PORT_MARK
     if systemctl is-active --quiet zivpn 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)'; then
         LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
@@ -207,15 +205,13 @@ mostrar_puertas_activas_panel() {
         ACTIVOS=1
     fi
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:442[[:space:]]|:442$)'; then
+    if systemctl is-active --quiet dropbear 2>/dev/null || ss -tulnp 2>/dev/null | grep -qE ":(109|143)[[:space:]]"; then
         if [[ -n "$LINEA3" ]]; then
-            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}442${RESET}"
+            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}109/143${RESET}"
         else
-            LINEA3="◦ DROPBEAR: ${VERDE}442${RESET}"
+            LINEA3="◦ DROPBEAR: ${VERDE}109/143${RESET}"
         fi
-        ACTIVOS=1
     fi
-
     # ZIVPN_REAL_PORT_MARK
     if systemctl is-active --quiet zivpn 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)'; then
         LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
@@ -429,7 +425,7 @@ menu_instaladores() {
         echo -e "${ROJO}[04]${RESET} ${AZUL}ZIVPN${RESET}                            $(estado_servicio zivpn)"
         echo -e "${ROJO}[05]${RESET} ${AZUL}SOCKS PYTHON DIRECTO WS${RESET}"
         echo -e "${ROJO}[06]${RESET} ${AZUL}DROPBEAR${RESET}                         $(estado_servicio dropbear)"
-        echo -e "${ROJO}[07]${RESET} ${AZUL}STUNNEL SSL${RESET}                       $(estado_servicio stunnel4)"
+        echo -e "${ROJO}[07]${RESET} ${AZUL}STUNNEL SSL${RESET}                       $(estado_servicio darkzsaid-stunnel)"
         echo -e "${ROJO}[08]${RESET} ${AZUL}BADVPN UDPGW${RESET}                      $(estado_servicio badvpn-udpgw)"
         echo -e "${ROJO}[09]${RESET} ${AZUL}PANEL WEB 3X-UI${RESET}                   $(estado_servicio x-ui)"
         echo -e "${ROJO}[00]${RESET} ${BLANCO}VOLVER${RESET}"
@@ -459,7 +455,8 @@ abrir_puertos_recomendados() {
     ufw allow 22/tcp
     ufw allow 80/tcp
     ufw allow 443/tcp
-    ufw allow 442/tcp
+    ufw allow 109/tcp
+    ufw allow 143/tcp
     ufw allow 7300/tcp
     ufw allow 7300/udp
     ufw allow 36712/udp
@@ -471,7 +468,8 @@ abrir_puertos_recomendados() {
     echo "22/tcp SSH"
     echo "80/tcp HTTP / WS"
     echo "443/tcp SSL"
-    echo "442/tcp Dropbear"
+    echo "109/tcp Dropbear"
+    echo "143/tcp Dropbear"
     echo "7300/tcp BadVPN"
     echo "7300/udp BadVPN"
     echo "36712/udp UDP-Hysteria APPmod's"
