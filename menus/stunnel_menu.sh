@@ -36,7 +36,7 @@ instalar_stunnel_full() {
 
     clean_title "INSTALANDO STUNNEL SSL"
 
-    clean_task "Instalando paquetes SSL" "apt-get update -y >/dev/null 2>&1 && apt-get install -y stunnel4 openssl >/dev/null 2>&1"
+    clean_task "Instalando paquetes SSL" "apt-get update -y >/dev/null 2>&1 && apt-get install -y darkzsaid-stunnel openssl >/dev/null 2>&1"
 
     clean_task "Preparando certificados" "mkdir -p /etc/stunnel; openssl req -new -x509 -days 3650 -nodes -out /etc/stunnel/stunnel.pem -keyout /etc/stunnel/stunnel.pem -subj '/C=US/ST=DarkZsaid/L=DarkZsaid/O=DarkZsaid/OU=DarkZsaid/CN=DarkZsaid' >/dev/null 2>&1; chmod 600 /etc/stunnel/stunnel.pem"
 
@@ -44,14 +44,14 @@ instalar_stunnel_full() {
 cert = /etc/stunnel/stunnel.pem
 client = no
 foreground = no
-pid = /var/run/stunnel4.pid
+pid = /var/run/darkzsaid-stunnel.pid
 
 [ssh-ssl]
 accept = 443
 connect = 127.0.0.1:22
 EOC"
 
-    clean_task "Habilitando Stunnel" "sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/stunnel4 2>/dev/null || echo 'ENABLED=1' > /etc/default/stunnel4"
+    clean_task "Habilitando Stunnel" "sed -i 's/^ENABLED=.*/ENABLED=1/' /etc/default/darkzsaid-stunnel 2>/dev/null || echo 'ENABLED=1' > /etc/default/darkzsaid-stunnel"
 
     clean_task "Abriendo puerto 443" "ufw allow 443/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
 
@@ -136,3 +136,62 @@ while true; do
         *) echo -e "${ROJO}Opción inválida.${RESET}"; sleep 1 ;;
     esac
 done
+
+
+reparar_ssl_darkzsaid() {
+    systemctl stop stunnel4 2>/dev/null || true
+    systemctl disable stunnel4 2>/dev/null || true
+    systemctl reset-failed stunnel4 2>/dev/null || true
+
+    systemctl stop darkzsaid-stunnel 2>/dev/null || true
+    pkill -9 -f "stunnel" 2>/dev/null || true
+
+    PID443=$(ss -ltnp 2>/dev/null | awk '/:443 / {print $NF}' | grep -oP 'pid=\K[0-9]+' | sort -u)
+    [[ -n "$PID443" ]] && kill -9 $PID443 2>/dev/null || true
+
+    apt-get update -y >/dev/null 2>&1
+    apt-get install -y stunnel4 openssl >/dev/null 2>&1
+
+    mkdir -p /etc/stunnel
+
+    openssl req -new -x509 -days 3650 -nodes \
+        -out /etc/stunnel/stunnel.pem \
+        -keyout /etc/stunnel/stunnel.pem \
+        -subj "/C=US/ST=DarkZsaid/L=DarkZsaid/O=DarkZsaid/OU=DarkZsaid/CN=DarkZsaid" >/dev/null 2>&1
+
+    chmod 600 /etc/stunnel/stunnel.pem
+
+    cat > /etc/stunnel/darkzsaid.conf <<'EOFSSL'
+cert = /etc/stunnel/stunnel.pem
+client = no
+foreground = yes
+pid = /run/darkzsaid-stunnel.pid
+
+[ssh-ssl]
+accept = 0.0.0.0:443
+connect = 127.0.0.1:22
+EOFSSL
+
+    cat > /etc/systemd/system/darkzsaid-stunnel.service <<'EOFSERVICE'
+[Unit]
+Description=DarkZsaid Stunnel SSL 443
+After=network.target ssh.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/stunnel4 /etc/stunnel/darkzsaid.conf
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOFSERVICE
+
+    ufw allow 443/tcp >/dev/null 2>&1 || true
+    ufw reload >/dev/null 2>&1 || true
+
+    systemctl daemon-reload
+    systemctl enable darkzsaid-stunnel >/dev/null 2>&1
+    systemctl restart darkzsaid-stunnel
+}
