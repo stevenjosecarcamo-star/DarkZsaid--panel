@@ -120,6 +120,7 @@ SERVICE
     systemctl restart udpmod
     bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
 
+    bash /opt/darkzsaid/menus/sync_udpmod_users.sh 2>/dev/null || true
     echo -e "${VERDE}UDPMOD activado correctamente.${RESET}"
     pausa
 }
