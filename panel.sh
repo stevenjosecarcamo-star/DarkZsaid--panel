@@ -451,7 +451,10 @@ menu_instaladores() {
             7|07) instalar_stunnel ;;
             8|08) instalar_badvpn ;;
             9|09) instalar_3xui ;;
-            0|00) return ;;
+            9|09)
+            bash /opt/darkzsaid/menus/udpmod_users_menu.sh
+            ;;
+        0|00) return ;;
             *) echo "Opción inválida"; sleep 1 ;;
         esac
     done
