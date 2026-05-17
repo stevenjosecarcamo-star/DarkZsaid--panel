@@ -1,5 +1,13 @@
 #!/bin/bash
 
+rm -f /opt/darkzsaid/data/autoiniciador.conf 2>/dev/null || true
+rm -f /usr/local/bin/autoiniciador-on 2>/dev/null || true
+rm -f /usr/local/bin/autoiniciador-off 2>/dev/null || true
+
+chmod -x /etc/update-motd.d/* 2>/dev/null || true
+rm -f /etc/motd 2>/dev/null || true
+touch /etc/motd
+
 cat > /root/.darkzsaid_welcome.sh <<'EOF2'
 #!/bin/bash
 
@@ -27,19 +35,18 @@ if [[ -z "$IP_PUBLICA" ]]; then
 fi
 
 echo -e "${CYAN}"
-echo "██████╗  █████╗ ██████╗ ██╗  ██╗███████╗███████╗ █████╗ ██╗██████╗ "
-echo "██╔══██╗██╔══██╗██╔══██╗██║ ██╔╝╚══███╔╝██╔════╝██╔══██╗██║██╔══██╗"
-echo "██║  ██║███████║██████╔╝█████╔╝   ███╔╝ ███████╗███████║██║██║  ██║"
-echo "██║  ██║██╔══██║██╔══██╗██╔═██╗  ███╔╝  ╚════██║██╔══██║██║██║  ██║"
-echo "██████╔╝██║  ██║██║  ██║██║  ██╗███████╗███████║██║  ██║██║██████╔╝"
-echo "╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ "
+echo "██████╗  █████╗ ██████╗ ██╗  ██╗███████╗ █████╗ ██╗██████╗ "
+echo "██╔══██╗██╔══██╗██╔══██╗██║ ██╔╝╚══███╔╝██╔══██╗██║██╔══██╗"
+echo "██║  ██║███████║██████╔╝█████╔╝   ███╔╝ ███████║██║██║  ██║"
+echo "██║  ██║██╔══██║██╔══██╗██╔═██╗  ███╔╝  ██╔══██║██║██║  ██║"
+echo "██████╔╝██║  ██║██║  ██║██║  ██╗███████╗██║  ██║██║██████╔╝"
+echo "╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═╝╚═════╝ "
 echo -e "${RESET}"
 
 echo -e "${VERDE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo -e "${BLANCO}${BOLD}        DARKZSAID VPS MANAGER / PANEL SSH${RESET}"
 echo -e "${VERDE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 echo
-echo -e "${CYAN}SERVIDOR INSTALADO EL :${RESET} ${VERDE}$(date -r /opt/darkzsaid 2>/dev/null '+%d-%m-%Y' || echo 'No detectado')${RESET}"
 echo -e "${CYAN}FECHA/HORA ACTUAL    :${RESET} ${VERDE}$FECHA_ACTUAL${RESET}"
 echo -e "${CYAN}NOMBRE DEL SERVIDOR  :${RESET} ${VERDE}$HOSTNAME_SERVER${RESET}"
 echo -e "${CYAN}IP PUBLICA           :${RESET} ${VERDE}$IP_PUBLICA${RESET}"
@@ -57,22 +64,43 @@ EOF2
 
 chmod +x /root/.darkzsaid_welcome.sh
 
-chmod -x /etc/update-motd.d/* 2>/dev/null || true
-rm -f /etc/motd 2>/dev/null || true
-touch /etc/motd
+cat > /root/.bashrc <<'EOF2'
+# ~/.bashrc limpio para root
 
-grep -q ".darkzsaid_welcome.sh" /root/.bashrc || cat >> /root/.bashrc <<'EOF2'
+case $- in
+    *i*) ;;
+      *) return;;
+esac
 
-# Bienvenida DarkZsaid al iniciar sesión SSH
+HISTCONTROL=ignoreboth
+shopt -s histappend
+HISTSIZE=1000
+HISTFILESIZE=2000
+shopt -s checkwinsize
+
+alias ll='ls -alF'
+alias la='ls -A'
+alias l='ls -CF'
+
+PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w# '
+
+# Bienvenida permanente DarkZsaid
 if [[ -t 1 && -z "$DARKZSAID_WELCOME_SHOWN" ]]; then
     export DARKZSAID_WELCOME_SHOWN=1
     bash /root/.darkzsaid_welcome.sh
 fi
 EOF2
 
+cat > /root/.profile <<'EOF2'
+# ~/.profile limpio para root
+
+if [ -f ~/.bashrc ]; then
+    . ~/.bashrc
+fi
+EOF2
+
 ln -sf /opt/darkzsaid/panel.sh /usr/local/bin/menu
 ln -sf /opt/darkzsaid/panel.sh /usr/local/bin/darkzsaid
-chmod +x /usr/local/bin/menu /usr/local/bin/darkzsaid 2>/dev/null || true
-chmod +x /opt/darkzsaid/panel.sh 2>/dev/null || true
+chmod +x /opt/darkzsaid/panel.sh /usr/local/bin/menu /usr/local/bin/darkzsaid 2>/dev/null || true
 
-echo "Bienvenida SSH DarkZsaid instalada correctamente."
+echo "Bienvenida permanente DarkZsaid instalada."
