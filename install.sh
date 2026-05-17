@@ -150,3 +150,8 @@ echo ""
 if [[ -x /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh ]]; then
   bash /opt/darkzsaid/menus/fix_udp_ranges_permanente.sh >/dev/null 2>&1 || true
 fi
+
+# Instalar bienvenida SSH DarkZsaid
+if [[ -x /opt/darkzsaid/menus/fix_bienvenida_ssh.sh ]]; then
+  bash /opt/darkzsaid/menus/fix_bienvenida_ssh.sh >/dev/null 2>&1 || true
+fi

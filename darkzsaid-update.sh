@@ -114,3 +114,8 @@ echo ""
 echo -e "${VERDE}${BOLD}Optimización y actualización terminada.${RESET}"
 echo ""
 read -p "Presiona ENTER para continuar..."
+
+# Reparar bienvenida SSH DarkZsaid
+if [[ -x /opt/darkzsaid/menus/fix_bienvenida_ssh.sh ]]; then
+  bash /opt/darkzsaid/menus/fix_bienvenida_ssh.sh >/dev/null 2>&1 || true
+fi
