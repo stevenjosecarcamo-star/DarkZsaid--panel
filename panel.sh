@@ -1,25 +1,5 @@
 #!/bin/bash
 
-    mkdir -p /opt/darkzsaid/data
-    ESTADO="$(cat "$AUTO_FILE" 2>/dev/null | head -1 | tr -d '\r\n ' | tr '[:lower:]' '[:upper:]')"
-    [[ "$ESTADO" != "ON" && "$ESTADO" != "OFF" ]] && ESTADO="OFF"
-    echo "$ESTADO"
-}
-
-    mkdir -p /opt/darkzsaid/data
-}
-
-    mkdir -p /opt/darkzsaid/data
-}
-
-    if [[ "$ESTADO" == "ON" ]]; then
-    else
-    fi
-    echo
-    read -r -p "Presiona ENTER para continuar..."
-}
-
-
 ROJO="\e[31m"
 VERDE="\e[32m"
 AMARILLO="\e[33m"
@@ -285,6 +265,7 @@ menu_principal() {
         echo -e "${ROJO}[1]${RESET} ${CYAN}➜${RESET} ${BLANCO}CONTROL USUARIOS (SSH/SSL/UDP)${RESET}        ${VERDE}●${RESET}"
         echo -e "${ROJO}[2]${RESET} ${CYAN}➜${RESET} ${BLANCO}INSTALADORES & PROTOCOLOS${RESET}       ${CYAN}▣${RESET}"
         echo -e "${ROJO}[3]${RESET} ${CYAN}➜${RESET} ${BLANCO}HERRAMIENTAS${RESET}                    ${AMARILLO}◉${RESET}"
+        # Opción AUTOINICIAR SCRIPT eliminada
         echo -e "${ROJO}[5]${RESET} ${CYAN}➜${RESET} ${BLANCO}ADMINISTRAR PUERTOS${RESET}            ${VERDE}✚${RESET}"
         echo -e "${ROJO}[6]${RESET} ${CYAN}➜${RESET} ${BLANCO}BOT TELEGRAM OPCIONAL${RESET}          ${ROJO}◆${RESET}"
         echo -e "${ROJO}[7]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}"
@@ -306,6 +287,8 @@ case "$op" in
             2) menu_instaladores ;;
             3) menu_herramientas ;;
         4|04)
+            echo "Opción eliminada."
+            sleep 1
             ;;
         5|05)
             bash /opt/darkzsaid/socks_ws_menu.sh
@@ -454,7 +437,10 @@ menu_instaladores() {
             1|01) abrir_puertos_recomendados ;;
             2|02) menu_appmods ;;
             3|03) menu_udp_custom_seguro ;;
-        ;;
+            4|04)
+                echo "Opción eliminada."
+                sleep 1
+                ;;
             5|05) menu_socks_python_ws ;;
             6|06) instalar_dropbear ;;
             7|07) instalar_stunnel ;;

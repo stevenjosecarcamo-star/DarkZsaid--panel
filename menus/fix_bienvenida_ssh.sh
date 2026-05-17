@@ -1,8 +1,8 @@
 #!/bin/bash
 
-rm -f /opt/darkzsaid/data/autoiniciador.conf 2>/dev/null || true
-rm -f /usr/local/bin/autoiniciador-on 2>/dev/null || true
-rm -f /usr/local/bin/autoiniciador-off 2>/dev/null || true
+# ELIMINADO AUTOINICIADOR: rm -f /opt/darkzsaid/data/autoiniciador.conf 2>/dev/null || true
+# ELIMINADO AUTOINICIADOR: rm -f /usr/local/bin/autoiniciador-on 2>/dev/null || true
+# ELIMINADO AUTOINICIADOR: rm -f /usr/local/bin/autoiniciador-off 2>/dev/null || true
 
 chmod -x /etc/update-motd.d/* 2>/dev/null || true
 rm -f /etc/motd 2>/dev/null || true
