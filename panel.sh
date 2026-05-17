@@ -271,6 +271,7 @@ menu_principal() {
         echo -e "${ROJO}[7]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}"
         echo ""
         echo -e "${ROJO}[08]${RESET} ${CYAN}➜${RESET} ${BLANCO}OPTIMIZAR / ACTUALIZAR SCRIPT${RESET}"
+        echo -e "${ROJO}[98]${RESET} ${CYAN}➜${RESET} ${ROJO}DESINSTALAR DARKZSAID${RESET}          ${ROJO}✖${RESET}"
         echo -e "${ROJO}[99]${RESET} ${CYAN}➜${RESET} ${AMARILLO}REBOOT VPS${RESET}                  ${ROJO}⟳${RESET}"
         echo -e "${ROJO}[0]${RESET}  ${CYAN}➜${RESET} ${ROJO}SALIR${RESET}                       ${AMARILLO}↩${RESET}"
         echo ""
