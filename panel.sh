@@ -415,6 +415,9 @@ menu_usuarios() {
                 awk -F: '$3 >= 1000 && $1 != "nobody" {print "Usuario:", $1, "| Expira:", $8}' /etc/passwd
                 pausa
                 ;;
+            9|09)
+                bash /opt/darkzsaid/menus/udpmod_users_menu.sh
+                ;;
             0) return ;;
             *) echo "Opción inválida"; sleep 1 ;;
         esac
@@ -588,11 +591,9 @@ menu_appmods() {
         echo -e "${ROJO}[1]${RESET} ${AZUL}INSTALAR / REINSTALAR UDPMOD ORIGINAL${RESET}"
         echo -e "${ROJO}[2]${RESET} ${AZUL}VER DATOS DE CONEXION${RESET}"
         echo -e "${ROJO}[3]${RESET} ${AZUL}REINICIAR SERVICIO${RESET}"
-        echo -e "${ROJO}[4]${RESET} ${AZUL}VER ESTADO LIMPIO${RESET}"
-        echo -e "${ROJO}[5]${RESET} ${AZUL}VER CONFIG.JSON${RESET}"
-        echo -e "${ROJO}[6]${RESET} ${AZUL}CAMBIAR OBFS${RESET}"
-        echo -e "${ROJO}[7]${RESET} ${AZUL}VER LOGS UDPMOD${RESET}"
-        echo -e "${ROJO}[8]${RESET} ${AZUL}VER REDIRECCION UDP${RESET}"
+        echo -e "${ROJO}[4]${RESET} ${AZUL}DETENER UDPMOD / CERRAR 36712${RESET}"
+        echo -e "${ROJO}[5]${RESET} ${AZUL}CAMBIAR OBFS${RESET}"
+        echo -e "${ROJO}[6]${RESET} ${AZUL}USUARIOS UDPMOD / HYSTERIA${RESET}"
         echo -e "${ROJO}[0]${RESET} ${BLANCO}VOLVER${RESET}"
         echo ""
         read -p "Opción: " op
@@ -605,19 +606,15 @@ menu_appmods() {
                 echo "Servicio reiniciado."
                 pausa
                 ;;
-            4) estado_limpio_udpm ;;
-            5)
-                cat /etc/udpmod/config.json 2>/dev/null || echo "No existe config."
+            4|04)
+                systemctl stop udpmod 2>/dev/null || true
+                pkill -f udpmod 2>/dev/null || true
+                echo "UDPMod detenido. Puerto 36712 cerrado si solo dependía de UDPMod."
                 pausa
                 ;;
-            6) cambiar_obfs_appmods ;;
-            7)
-                journalctl -u udpmod -n 80 --no-pager -l
-                pausa
-                ;;
-            8)
-                iptables -t nat -S PREROUTING | grep 36712 || echo "No hay redirección."
-                pausa
+            5|05) cambiar_obfs_appmods ;;
+            6|06)
+                bash /opt/darkzsaid/menus/udpmod_users_menu.sh
                 ;;
             0) return ;;
             *) echo "Opción inválida"; sleep 1 ;;
