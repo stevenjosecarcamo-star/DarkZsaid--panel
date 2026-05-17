@@ -306,6 +306,10 @@ case "$op" in
 
 
 
+            98)
+                bash /opt/darkzsaid/menus/uninstall_darkzsaid.sh
+                exit 0
+                ;;
             99) reboot ;;
             0) clear; exit ;;
             *) echo "Opción inválida"; sleep 1 ;;
