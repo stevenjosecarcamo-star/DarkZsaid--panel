@@ -22,7 +22,7 @@ BLANCO="\e[97m"
 RESET="\e[0m"
 BOLD="\e[1m"
 
-REPO_URL="https://github.com/stevenjosecarcamo-star/DarkZsaid--panel.git"
+REPO_URL="https://github.com/DarkZsaid/DarkZsaid-panel.git"
 APP_DIR="/opt/darkzsaid"
 
 echo -e "${ROJO}════════════════════════════════════════════════════${RESET}"
