@@ -458,7 +458,7 @@ menu_instaladores() {
             2|02) menu_appmods ;;
             3|03) menu_udp_custom_seguro ;;
             4|04)
-                echo "Opción eliminada."
+                menu_zivpn_seguro
                 sleep 1
                 ;;
             5|05) menu_socks_python_ws ;;
@@ -574,26 +574,12 @@ menu_udp_custom_seguro() {
 
 
 menu_zivpn_seguro() {
-    titulo "ZIVPN"
-
     if [[ -f /opt/darkzsaid/menus/zivpn_menu.sh ]]; then
         bash /opt/darkzsaid/menus/zivpn_menu.sh
-        return
+    else
+        echo "No se encontró /opt/darkzsaid/menus/zivpn_menu.sh"
+        read -p "Presiona ENTER para volver..."
     fi
-
-    echo -e "${AMARILLO}ZIVPN ya queda como está configurado actualmente.${RESET}"
-    echo "No se encontró menú externo: /opt/darkzsaid/menus/zivpn_menu.sh"
-    echo ""
-    echo "Servicio: zivpn"
-    echo -n "Estado: "
-    systemctl is-active zivpn 2>/dev/null || echo "OFF"
-    echo ""
-    echo "Puerto ZIVPN:"
-    ss -ulnp | grep -Ei 'zivpn|ZipVPN|5667' || echo "5667 no está escuchando."
-    echo ""
-    echo "Config actual:"
-    ls -lh /etc/zivpn/config.json /etc/zivpn/zivpn/config.json 2>/dev/null || true
-    pausa
 }
 
 menu_appmods() {

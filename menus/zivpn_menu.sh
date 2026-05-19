@@ -3,7 +3,7 @@
 
 ZIVPN_SERVICE="zivpn"
 ZIVPN_CONFIG="/etc/zivpn/config.json"
-ZIVPN_BIN="/bin/ZipVPN"
+ZIVPN_BIN="/usr/local/bin/zivpn"
 ZIVPN_PORT="5667"
 
 titulo_zivpn() {
@@ -30,15 +30,15 @@ asegurar_motor_zivpn() {
     mkdir -p /etc/zivpn
 
     if [[ ! -x "$ZIVPN_BIN" ]]; then
-        if [[ -x "/usr/bin/ZipVPN" ]]; then
-            cp -a /usr/bin/ZipVPN "$ZIVPN_BIN"
+        if [[ -x "/usr/usr/local/bin/zivpn" ]]; then
+            cp -a /usr/usr/local/bin/zivpn "$ZIVPN_BIN"
             chmod +x "$ZIVPN_BIN"
-        elif [[ -x "/etc/ADMcgh/bin/ZipVPN" ]]; then
-            cp -a /etc/ADMcgh/bin/ZipVPN "$ZIVPN_BIN"
+        elif [[ -x "/etc/ADMcgh/usr/local/bin/zivpn" ]]; then
+            cp -a /etc/ADMcgh/usr/local/bin/zivpn "$ZIVPN_BIN"
             chmod +x "$ZIVPN_BIN"
         else
             error_msg "No se encontró el motor ZIVPN."
-            echo "Debe existir /bin/ZipVPN o /usr/bin/ZipVPN."
+            echo "Debe existir /usr/local/bin/zivpn o /usr/usr/local/bin/zivpn."
             pausa_bonita
             return 1
         fi
@@ -154,8 +154,8 @@ liberar_puerto_zivpn() {
     systemctl stop zvpn 2>/dev/null || true
     systemctl stop sipvpn-activex 2>/dev/null || true
 
-    pkill -f "ZipVPN server" 2>/dev/null || true
-    pkill -f "/bin/ZipVPN" 2>/dev/null || true
+    pkill -f "zivpn server" 2>/dev/null || true
+    pkill -f "/usr/local/bin/zivpn" 2>/dev/null || true
 
     sleep 1
 }
@@ -346,7 +346,7 @@ detener_zivpn() {
     titulo_zivpn "DETENER ZIVPN"
 
     systemctl stop zivpn >/dev/null 2>&1
-    pkill -f "ZipVPN server" 2>/dev/null || true
+    pkill -f "zivpn server" 2>/dev/null || true
 
     warn_msg "ZIVPN detenido."
     echo -e "${AMARILLO}Estado:${RESET} $(estado_zivpn)"
@@ -378,7 +378,7 @@ remover_zivpn() {
     if [[ "$r" == "s" || "$r" == "S" ]]; then
         systemctl stop zivpn >/dev/null 2>&1 || true
         systemctl disable zivpn >/dev/null 2>&1 || true
-        pkill -f "ZipVPN server" 2>/dev/null || true
+        pkill -f "zivpn server" 2>/dev/null || true
         rm -f /etc/systemd/system/zivpn.service
         systemctl daemon-reload >/dev/null 2>&1
         ok_msg "ZIVPN removido del servicio."
