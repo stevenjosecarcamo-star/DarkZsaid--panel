@@ -47,7 +47,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/udp server --exclude 22,80,443,7300,7100,7200 /usr/bin/config.json
+ExecStart=/usr/bin/udp server --config /usr/bin/config.json --exclude 22,80,443,7300,7100,7200
 Restart=always
 RestartSec=3
 
