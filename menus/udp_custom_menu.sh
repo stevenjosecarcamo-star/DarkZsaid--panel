@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
+
 VERDE="\e[32m"
 ROJO="\e[31m"
 AMARILLO="\e[33m"
@@ -7,78 +9,72 @@ CYAN="\e[36m"
 BLANCO="\e[97m"
 RESET="\e[0m"
 
-pausa() {
+pausa_udp_custom() {
     echo ""
     read -p "Presiona ENTER para continuar..."
 }
 
 estado_udp_custom() {
-    clear
-    echo -e "${CYAN}===== UDP CUSTOM HTTP CUSTOM =====${RESET}"
-    echo ""
+    titulo_instalacion "UDP CUSTOM HTTP"
 
-    if systemctl is-active --quiet udp-custom; then
-        echo -e "Servicio: ${VERDE}ACTIVO${RESET}"
+    if systemctl is-active --quiet udp-custom 2>/dev/null; then
+        ok "Servicio udp-custom activo"
     else
-        echo -e "Servicio: ${ROJO}OFF${RESET}"
+        fail "Servicio udp-custom apagado"
     fi
 
-    if ss -ulnp | grep -q ":36712"; then
-        echo -e "Puerto 36712: ${VERDE}ESCUCHANDO${RESET}"
+    if ss -ulnp 2>/dev/null | grep -q ":36712"; then
+        ok "Puerto 36712 escuchando"
     else
-        echo -e "Puerto 36712: ${ROJO}NO ESCUCHA${RESET}"
+        fail "Puerto 36712 no escucha"
     fi
 
     echo ""
-    echo -e "${AMARILLO}Datos para HTTP Custom:${RESET}"
-    echo "Servidor/IP: $(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
-    echo "Puerto UDP: 36712"
-    echo "Modo: UDP Custom"
-    pausa
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "${BLANCO}Servidor/IP:${RESET} $(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
+    echo -e "${BLANCO}Puerto UDP:${RESET} 36712"
+    echo -e "${BLANCO}Modo:${RESET} UDP Custom / HTTP Custom"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+
+    pausa_udp_custom
 }
 
 activar_udp_custom() {
-    clear
-    echo -e "${CYAN}===== ACTIVANDO UDP CUSTOM =====${RESET}"
-
-    systemctl daemon-reload
-    systemctl enable udp-custom >/dev/null 2>&1
-    systemctl restart udp-custom
-
-    ufw allow 36712/udp >/dev/null 2>&1 || true
-    iptables -I INPUT -p udp --dport 36712 -j ACCEPT 2>/dev/null || true
-
-    sleep 1
-
-    if systemctl is-active --quiet udp-custom && ss -ulnp | grep -q ":36712"; then
-        echo -e "${VERDE}✅ UDP Custom activo en puerto 36712${RESET}"
+    if [[ -f /opt/darkzsaid/menus/install_udp_custom_http.sh ]]; then
+        bash /opt/darkzsaid/menus/install_udp_custom_http.sh
     else
-        echo -e "${ROJO}❌ UDP Custom no levantó${RESET}"
-        systemctl status udp-custom --no-pager
+        titulo_instalacion "UDP CUSTOM HTTP"
+        fail "No se encontró install_udp_custom_http.sh"
+        pausa_udp_custom
     fi
-
-    pausa
 }
 
 detener_udp_custom() {
-    clear
-    echo -e "${AMARILLO}Deteniendo UDP Custom...${RESET}"
-    systemctl stop udp-custom
-    echo -e "${VERDE}Listo.${RESET}"
-    pausa
+    titulo_instalacion "DETENER UDP CUSTOM"
+
+    paso "Deteniendo servicio udp-custom..."
+    systemctl stop udp-custom >/dev/null 2>&1 || true
+
+    if systemctl is-active --quiet udp-custom 2>/dev/null; then
+        fail "No se pudo detener udp-custom"
+    else
+        ok "UDP Custom detenido"
+    fi
+
+    pausa_udp_custom
 }
 
 while true; do
     clear
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-    echo -e "${BLANCO}     UDP CUSTOM HTTP CUSTOM${RESET}"
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "${CYAN}╔══════════════════════════════════════════════╗${RESET}"
+    echo -e "${BLANCO}║          ⚡ UDP CUSTOM HTTP CUSTOM ⚡        ║${RESET}"
+    echo -e "${CYAN}╚══════════════════════════════════════════════╝${RESET}"
     echo ""
-    echo -e "[01] Activar / reiniciar UDP Custom"
-    echo -e "[02] Ver estado y datos de conexión"
-    echo -e "[03] Detener UDP Custom"
+    echo -e "${BLANCO}[01]${RESET} Activar / instalar UDP Custom"
+    echo -e "${BLANCO}[02]${RESET} Ver estado y datos de conexión"
+    echo -e "${BLANCO}[03]${RESET} Detener UDP Custom"
     echo ""
-    echo -e "[00] Volver"
+    echo -e "${BLANCO}[00]${RESET} Volver"
     echo ""
     read -p "Opción: " op
 

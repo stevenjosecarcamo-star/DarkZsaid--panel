@@ -1,4 +1,5 @@
 #!/bin/bash
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
 [[ -f /opt/darkzsaid/lib/ui.sh ]] && source /opt/darkzsaid/lib/ui.sh
 
 ZIVPN_SERVICE="zivpn"
@@ -88,7 +89,7 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 EOF_SERVICE
 
-    systemctl daemon-reload >/dev/null 2>&1
+    systemctl daemon-reload >/dev/null 2>&1 >/dev/null 2>&1
 }
 
 normalizar_config_zivpn() {
@@ -161,8 +162,8 @@ liberar_puerto_zivpn() {
 }
 
 reiniciar_zivpn_limpio() {
-    systemctl daemon-reload >/dev/null 2>&1
-    systemctl enable zivpn >/dev/null 2>&1
+    systemctl daemon-reload >/dev/null 2>&1 >/dev/null 2>&1
+    systemctl enable zivpn >/dev/null 2>&1 >/dev/null 2>&1
 
     systemctl stop zivpn >/dev/null 2>&1 || true
     liberar_puerto_zivpn
@@ -333,7 +334,7 @@ encender_zivpn() {
     normalizar_config_zivpn
     red_zivpn
 
-    systemctl enable zivpn >/dev/null 2>&1
+    systemctl enable zivpn >/dev/null 2>&1 >/dev/null 2>&1
     systemctl start zivpn >/dev/null 2>&1
 
     ok_msg "ZIVPN encendido."
@@ -380,7 +381,7 @@ remover_zivpn() {
         systemctl disable zivpn >/dev/null 2>&1 || true
         pkill -f "zivpn server" 2>/dev/null || true
         rm -f /etc/systemd/system/zivpn.service
-        systemctl daemon-reload >/dev/null 2>&1
+        systemctl daemon-reload >/dev/null 2>&1 >/dev/null 2>&1
         ok_msg "ZIVPN removido del servicio."
         echo "Las claves quedan guardadas en /etc/zivpn/config.json"
     else

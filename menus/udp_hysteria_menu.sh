@@ -1,4 +1,5 @@
 #!/bin/bash
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
 
 [[ -f /opt/darkzsaid/lib/ui.sh ]] && source /opt/darkzsaid/lib/ui.sh
 
@@ -54,7 +55,7 @@ mostrar_datos_udpmod() {
     echo ""
 
     echo -e "${CYAN}Servicio systemd:${RESET}"
-    systemctl status "$UDP_SERVICE" --no-pager -l 2>/dev/null | head -25 || echo "No existe udpmod.service."
+    systemctl is-active --quiet "$UDP_SERVICE" 2>/dev/null && echo -e "${VERDE}✓${RESET} Servicio activo" || echo -e "${ROJO}✘${RESET} Servicio apagado"
 }
 
 abrir_puerto_udpmod() {
@@ -82,8 +83,8 @@ activar_instalar_udpmod() {
     if systemctl list-unit-files 2>/dev/null | grep -q "^${UDP_SERVICE}.service"; then
         echo -e "${VERDE}Servicio udpmod encontrado.${RESET}"
         echo "Iniciando UDP-Hysteria..."
-        systemctl enable "$UDP_SERVICE" >/dev/null 2>&1
-        systemctl restart "$UDP_SERVICE" >/dev/null 2>&1
+        systemctl enable >/dev/null 2>&1 "$UDP_SERVICE" >/dev/null 2>&1
+        systemctl restart >/dev/null 2>&1 "$UDP_SERVICE" >/dev/null 2>&1
         sleep 1
 
         mostrar_datos_udpmod
@@ -129,7 +130,7 @@ reiniciar_udpmod() {
     abrir_puerto_udpmod
 
     if systemctl list-unit-files 2>/dev/null | grep -q "^${UDP_SERVICE}.service"; then
-        systemctl restart "$UDP_SERVICE" >/dev/null 2>&1
+        systemctl restart >/dev/null 2>&1 "$UDP_SERVICE" >/dev/null 2>&1
         sleep 1
         echo -e "${VERDE}UDP-Hysteria reiniciado.${RESET}"
     else
@@ -161,7 +162,7 @@ remover_udpmod() {
     pkill -f "udpmod" 2>/dev/null || true
 
     rm -f /etc/systemd/system/udpmod.service
-    systemctl daemon-reload >/dev/null 2>&1
+    systemctl daemon-reload >/dev/null 2>&1 >/dev/null 2>&1
 
     echo -e "${VERDE}UDP-Hysteria removido del servicio.${RESET}"
     echo ""

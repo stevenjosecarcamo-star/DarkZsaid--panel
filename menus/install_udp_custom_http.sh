@@ -1,16 +1,15 @@
 #!/bin/bash
 
-VERDE="\e[32m"
-ROJO="\e[31m"
-AMARILLO="\e[33m"
-CYAN="\e[36m"
-RESET="\e[0m"
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
 
-echo -e "${CYAN}===== INSTALANDO UDP CUSTOM HTTP CUSTOM =====${RESET}"
+titulo_instalacion "UDP CUSTOM HTTP"
 
-apt-get update -y
-apt-get install -y curl iptables libpam0g
+paso "Preparando dependencias..."
+apt-get update -y >/dev/null 2>&1
+apt-get install -y curl iptables libpam0g >/dev/null 2>&1
+ok "Dependencias listas"
 
+paso "Detectando arquitectura..."
 ARCH=$(uname -m)
 
 if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
@@ -19,16 +18,21 @@ else
     BIN_URL="https://github.com/firewallfalcons/FirewallFalcon-Manager/raw/main/udp/udp-custom-linux-amd64"
 fi
 
-echo -e "${AMARILLO}Descargando binario UDP Custom...${RESET}"
-curl -L -s -f -o /usr/bin/udp "$BIN_URL"
+ok "Arquitectura detectada: $ARCH"
+
+paso "Descargando motor UDP Custom..."
+curl -L -s -f -o /usr/bin/udp "$BIN_URL" >/dev/null 2>&1
 
 if [[ ! -s /usr/bin/udp ]]; then
-    echo -e "${ROJO}❌ Error descargando /usr/bin/udp${RESET}"
+    fail "No se pudo descargar el motor UDP Custom"
+    pausa_bonita
     exit 1
 fi
 
 chmod +x /usr/bin/udp
+ok "Motor UDP Custom instalado"
 
+paso "Creando configuración..."
 cat > /usr/bin/config.json <<'JSON'
 {
   "listen": ":36712",
@@ -39,7 +43,9 @@ cat > /usr/bin/config.json <<'JSON'
   }
 }
 JSON
+ok "Configuración creada"
 
+paso "Creando servicio systemd..."
 cat > /etc/systemd/system/udp-custom.service <<'EOF2'
 [Unit]
 Description=UDP Custom HTTP Custom
@@ -54,19 +60,32 @@ RestartSec=3
 [Install]
 WantedBy=multi-user.target
 EOF2
+ok "Servicio creado"
 
+paso "Abriendo puerto UDP 36712..."
 ufw allow 36712/udp >/dev/null 2>&1 || true
-iptables -I INPUT -p udp --dport 36712 -j ACCEPT 2>/dev/null || true
+iptables -I INPUT -p udp --dport 36712 -j ACCEPT >/dev/null 2>&1 || true
+ok "Puerto 36712 permitido"
 
-systemctl daemon-reload
+paso "Iniciando UDP Custom..."
+systemctl daemon-reload >/dev/null 2>&1
 systemctl enable udp-custom >/dev/null 2>&1
-systemctl restart udp-custom
+systemctl restart udp-custom >/dev/null 2>&1
 
-sleep 1
+sleep 2
 
-if systemctl is-active --quiet udp-custom && ss -ulnp | grep -q ":36712"; then
-    echo -e "${VERDE}✅ UDP Custom instalado y activo en puerto 36712${RESET}"
+if systemctl is-active --quiet udp-custom && ss -ulnp 2>/dev/null | grep -q ":36712"; then
+    ok "UDP Custom activo en puerto 36712"
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
+    echo -e "${BLANCO}Servidor/IP:${RESET} $(curl -s ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')"
+    echo -e "${BLANCO}Puerto UDP:${RESET} 36712"
+    echo -e "${BLANCO}Modo:${RESET} UDP Custom / HTTP Custom"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
 else
-    echo -e "${ROJO}❌ UDP Custom no levantó correctamente${RESET}"
-    systemctl status udp-custom --no-pager
+    fail "UDP Custom no levantó correctamente"
+    echo ""
+    echo -e "${AMARILLO}Revisa con:${RESET} journalctl -u udp-custom.service --no-pager -n 30"
 fi
+
+pausa_bonita
