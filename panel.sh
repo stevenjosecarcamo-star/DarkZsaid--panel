@@ -107,7 +107,13 @@ mostrar_puertas_activas_panel() {
         LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
     fi
 
-    if systemctl is-active --quiet udpmod 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
+        # UDP CUSTOM HTTP Custom real
+    if systemctl is-active --quiet udp-custom 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
+        LINEA4="${LINEA4} ∘ UDP-CUSTOM: ${VERDE}36712${RESET}"
+        ACTIVOS=1
+    fi
+
+if systemctl is-active --quiet udpmod 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
         LINEA4="${LINEA4}◦ UDP-HYSTERIA: ${VERDE}36712${RESET}"
         ACTIVOS=1
     fi
@@ -215,6 +221,12 @@ mostrar_puertas_activas_panel() {
     # ZIVPN_REAL_PORT_MARK
     if systemctl is-active --quiet zivpn 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)'; then
         LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
+    fi
+
+    # UDP CUSTOM HTTP Custom real
+    if systemctl is-active --quiet udp-custom 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
+        LINEA4="${LINEA4} ∘ UDP-CUSTOM: ${VERDE}36712${RESET}"
+        ACTIVOS=1
     fi
 
     if systemctl is-active --quiet udpmod 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
