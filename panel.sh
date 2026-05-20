@@ -1,11 +1,11 @@
 #!/bin/bash
 
-ROJO="\e[31m"
-VERDE="\e[32m"
-AMARILLO="\e[33m"
-AZUL="\e[34m"
-CYAN="\e[36m"
-BLANCO="\e[97m"
+ROJO="\e[1;31m"
+VERDE="\e[1;32m"
+AMARILLO="\e[1;33m"
+AZUL="\e[1;34m"
+CYAN="\e[1;36m"
+BLANCO="\e[1;97m"
 RESET="\e[0m"
 BOLD="\e[1m"
 
@@ -2452,12 +2452,12 @@ menu_principal() {
     while true; do
         clear
 
-        ROJO="\e[31m"
-        VERDE="\e[32m"
-        AMARILLO="\e[33m"
-        AZUL="\e[34m"
-        CYAN="\e[36m"
-        BLANCO="\e[97m"
+        ROJO="\e[1;31m"
+        VERDE="\e[1;32m"
+        AMARILLO="\e[1;33m"
+        AZUL="\e[1;34m"
+        CYAN="\e[1;36m"
+        BLANCO="\e[1;97m"
         RESET="\e[0m"
 
         PANEL_AUTHOR="@DarkZsaid"
@@ -2476,7 +2476,7 @@ menu_principal() {
         RAYA="${CYAN}◆══════════════════════════════════════════════◆${RESET}"
 
         echo -e "${CYAN}"
-        figlet "$PANEL_LOGO_TEXT" 2>/dev/null || echo "========== $PANEL_LOGO_TEXT =========="
+                toilet -f big "$PANEL_LOGO_TEXT" 2>/dev/null || figlet "$PANEL_LOGO_TEXT" 2>/dev/null || echo "========== $PANEL_LOGO_TEXT =========="
         echo -e "${RESET}"
 
         echo -e "$RAYA"
@@ -2484,24 +2484,25 @@ menu_principal() {
         echo -e "$RAYA"
         echo -e "$RAYA"
 
-        echo -e "${CYAN} ◈${RESET} ${VERDE}SO:${RESET}     ${BLANCO}${SO_INFO}${RESET}     ${CYAN}◈${RESET} ${VERDE}IP:${RESET} ${BLANCO}${IP_INFO}${RESET}"
-        echo -e "${CYAN} ◈${RESET} ${VERDE}CPU:${RESET}    ${BLANCO}${CPU_INFO} cores${RESET}             ${CYAN}◈${RESET} ${VERDE}Fecha:${RESET} ${BLANCO}${FECHA_INFO}${RESET}"
-        echo -e "${CYAN} ◈${RESET} ${VERDE}RAM:${RESET}    ${BLANCO}${RAM_INFO}${RESET}                ${CYAN}◈${RESET} ${VERDE}Uptime:${RESET} ${BLANCO}${UPTIME_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${CYAN}SO:${RESET} ${BLANCO}${SO_INFO}${RESET}     ${CYAN}◈${RESET} ${CYAN}IP:${RESET} ${AMARILLO}${IP_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${CYAN}CPU:${RESET} ${BLANCO}${CPU_INFO} cores${RESET}          ${CYAN}◈${RESET} ${CYAN}Fecha:${RESET} ${AMARILLO}${FECHA_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${CYAN}RAM:${RESET} ${BLANCO}${RAM_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${CYAN}Up:${RESET} ${BLANCO}${UPTIME_INFO}${RESET}"
         echo -e "$RAYA"
 
-        ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSH:22${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}        ${CYAN}◈${RESET} ${BLANCO}DNS:53${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
-        ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SOCKS:80${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
-        ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSL:443${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
-        ss -tulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}UDP:36712${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
-        ss -tulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}ZIVPN:5667${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
-        ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}BadVPN:7300${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSH:22${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}        ${CYAN}◈${RESET} ${BLANCO}DNS:53${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SOCKS:80${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSL:443${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}UDP:36712${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}ZIVPN:5667${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}BadVPN:7300${RESET} ${CYAN}◆${RESET} ${CYAN}ON${RESET}"
 
         echo -e "$RAYA"
 
         printf "%b\n" "${BLANCO}<1>${RESET} ⚡ ${BLANCO}USUARIOS${RESET}          ${BLANCO}<2>${RESET} 📡 ${BLANCO}PROTOCOLOS${RESET}"
         printf "%b\n" "${BLANCO}<3>${RESET} 🛠  ${BLANCO}HERRAMIENTAS${RESET}    ${BLANCO}<5>${RESET} ✚ ${BLANCO}PUERTOS${RESET}"
         printf "%b\n" "${BLANCO}<6>${RESET} ◆  ${BLANCO}BOT TELEGRAM${RESET}    ${BLANCO}<7>${RESET} ⚙ ${BLANCO}LOGO SUPERIOR${RESET}"
-        printf "%b\n" "${CYAN} ◈ Version: ${VERDE}${PANEL_VERSION}${RESET} ${CYAN}◈${RESET}"
+        printf "%b\n" "${CYAN} ◈ Version: ${CYAN}${PANEL_VERSION}${RESET} ${CYAN}◈${RESET}"
         echo -e "$RAYA"
 
         printf "%b\n" "${BLANCO}<08>${RESET} 💻 ${AMARILLO}ACTUALIZAR${RESET}      ${BLANCO}<9>${RESET} 🗑 ${ROJO}DESINSTALAR${RESET}"
