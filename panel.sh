@@ -51,253 +51,88 @@ info_vps() {
 
 
 mostrar_puertas_activas_panel() {
-    echo -e "${AMARILLO}* Puertas Activas en su Servidor *${RESET}"
-    echo -e "${VERDE}────────────────────────────────────────────${RESET}"
+    echo -e "${AMARILLO}*     clear
 
-    ACTIVOS=0
+    PANEL_NAME="DARKZSAID"
+    PANEL_AUTHOR="@DarkZsaid"
+    PANEL_VERSION="v1.0"
 
-    LINEA1=""
-    LINEA2=""
-    LINEA3=""
-    LINEA4=""
-    LINEA5=""
+    [[ -f /etc/darkzsaid/panel_theme.conf ]] && source /etc/darkzsaid/panel_theme.conf 2>/dev/null || true
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)'; then
-        LINEA1="${LINEA1}◦ SSH: ${VERDE}22${RESET}"
-        ACTIVOS=1
-    fi
+    SO_INFO="$(lsb_release -ds 2>/dev/null | tr -d '"' || echo Linux)"
+    IP_INFO="$(curl -s --max-time 2 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')"
+    CPU_INFO="$(nproc 2>/dev/null || echo 1)"
+    FECHA_INFO="$(date '+%d/%m/%Y-%H:%M')"
+    RAM_INFO="$(free -m | awk '/Mem:/ {print $3"Mi"}')"
+    UPTIME_INFO="$(uptime -p 2>/dev/null | sed 's/up //')"
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:53[[:space:]]|:53$)'; then
-        if [[ -n "$LINEA1" ]]; then
-            LINEA1="${LINEA1}              ◦ System-DNS: ${VERDE}53${RESET}"
-        else
-            LINEA1="◦ System-DNS: ${VERDE}53${RESET}"
-        fi
-        ACTIVOS=1
-    fi
+    PUERTO_SSH=""
+    PUERTO_DNS=""
+    PUERTO_SOCKS=""
+    PUERTO_SSL=""
+    PUERTO_UDP_CUSTOM=""
+    PUERTO_ZIVPN=""
+    PUERTO_BADVPN1=""
+    PUERTO_BADVPN2=""
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)'; then
-        LINEA2="${LINEA2}◦ SOCKS/PYTHON: ${VERDE}80${RESET}"
-        ACTIVOS=1
-    fi
+    ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)' && PUERTO_SSH="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:53[[:space:]]|:53$)' && PUERTO_DNS="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)' && PUERTO_SOCKS="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)' && PUERTO_SSL="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)' && PUERTO_UDP_CUSTOM="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)' && PUERTO_ZIVPN="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:7200[[:space:]]|:7200$)' && PUERTO_BADVPN1="${VERDE}ON${RESET}"
+    ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)' && PUERTO_BADVPN2="${VERDE}ON${RESET}"
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:81[[:space:]]|:81$)'; then
-        if [[ -n "$LINEA2" ]]; then
-            LINEA2="${LINEA2}          ◦ WEB-NGINX: ${VERDE}81${RESET}"
-        else
-            LINEA2="◦ WEB-NGINX: ${VERDE}81${RESET}"
-        fi
-        ACTIVOS=1
-    fi
+    RAYA="${CYAN}◆══════════════════════════════════════════════◆${RESET}"
 
-    if ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)'; then
-        LINEA3="${LINEA3}◦ SSL: ${VERDE}443${RESET}"
-        ACTIVOS=1
-    fi
+    echo -e "${CYAN}"
+cat <<'LOGO'
+ ____             _    ______          _     _ 
+|  _ \  __ _ _ __| | _|__  / ___  ___(_) __| |
+| | | |/ _  | '__| |/ / / / / __|/ _ \ |/ _  |
+| |_| | (_| | |  |   < / /_ \__ \  __/ | (_| |
+|____/ \__,_|_|  |_|\_/____|___/\___|_|\__,_|
+LOGO
+echo -e "${RESET}"
 
-    if systemctl is-active --quiet dropbear 2>/dev/null || ss -tulnp 2>/dev/null | grep -qE ":(109|143)[[:space:]]"; then
-        if [[ -n "$LINEA3" ]]; then
-            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}109/143${RESET}"
-        else
-            LINEA3="◦ DROPBEAR: ${VERDE}109/143${RESET}"
-        fi
-    fi
-    # ZIVPN_REAL_PORT_MARK
-    if systemctl is-active --quiet zivpn 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)'; then
-        LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
-    fi
-
-        # UDP CUSTOM HTTP Custom real
-    if systemctl is-active --quiet udp-custom 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
-        LINEA4="${LINEA4} ∘ UDP-CUSTOM: ${VERDE}36712${RESET}"
-        ACTIVOS=1
-    fi
-
-if systemctl is-active --quiet udpmod 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
-        LINEA4="${LINEA4}◦ UDP-HYSTERIA: ${VERDE}36712${RESET}"
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)'; then
-        if [[ -n "$LINEA4" ]]; then
-            LINEA4="${LINEA4}     ◦ BadVPN: ${VERDE}7300${RESET}"
-        else
-            LINEA4="◦ BadVPN: ${VERDE}7300${RESET}"
-        fi
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:7200[[:space:]]|:7200$)'; then
-        LINEA5="◦ BadVPN: ${VERDE}7200${RESET}"
-        ACTIVOS=1
-    fi
-
-    [[ -n "$LINEA1" ]] && echo -e "$LINEA1"
-    [[ -n "$LINEA2" ]] && echo -e "$LINEA2"
-    [[ -n "$LINEA3" ]] && echo -e "$LINEA3"
-    [[ -n "$LINEA4" ]] && echo -e "$LINEA4"
-    [[ -n "$LINEA5" ]] && echo -e "$LINEA5"
-
-    if [[ "$ACTIVOS" -eq 0 ]]; then
-        echo -e "${ROJO}No hay puertos activos detectados.${RESET}"
-    fi
-
-    echo -e "${VERDE}────────────────────────────────────────────${RESET}"
+    echo -e "$RAYA"
+    echo -e "${BLANCO} ⚡ Gestor VPN/SSH by ${CYAN}${PANEL_AUTHOR:-@DarkZsaid}${RESET}  ${AMARILLO}◆ ${PANEL_VERSION:-v1.0}${RESET}"
+    echo -e "$RAYA"
     echo ""
-}
 
+    echo -e "$RAYA"
+    echo -e "${CYAN} ◈${RESET} SO:    ${BLANCO}${SO_INFO}${RESET}        ${CYAN}◈${RESET} IP: ${BLANCO}${IP_INFO}${RESET}"
+    echo -e "${CYAN} ◈${RESET} CPU:   ${BLANCO}${CPU_INFO} cores${RESET}              ${CYAN}◈${RESET} Fecha: ${BLANCO}${FECHA_INFO}${RESET}"
+    echo -e "${CYAN} ◈${RESET} RAM:   ${BLANCO}${RAM_INFO}${RESET}                 ${CYAN}◈${RESET} Uptime: ${BLANCO}${UPTIME_INFO}${RESET}"
+    echo -e "$RAYA"
 
+    [[ -n "$PUERTO_SSH" ]] && echo -e "${CYAN} ◈${RESET} SSH:22 ${CYAN}◆${RESET} $PUERTO_SSH        ${CYAN}◈${RESET} DNS:53 ${CYAN}◆${RESET} ${PUERTO_DNS:-${ROJO}OFF${RESET}}"
+    [[ -n "$PUERTO_SOCKS" ]] && echo -e "${CYAN} ◈${RESET} SOCKS:80 ${CYAN}◆${RESET} $PUERTO_SOCKS"
+    [[ -n "$PUERTO_SSL" ]] && echo -e "${CYAN} ◈${RESET} SSL:443 ${CYAN}◆${RESET} $PUERTO_SSL"
+    [[ -n "$PUERTO_UDP_CUSTOM" ]] && echo -e "${CYAN} ◈${RESET} UDP:36712 ${CYAN}◆${RESET} $PUERTO_UDP_CUSTOM"
+    [[ -n "$PUERTO_ZIVPN" ]] && echo -e "${CYAN} ◈${RESET} ZIVPN:5667 ${CYAN}◆${RESET} $PUERTO_ZIVPN"
+    [[ -n "$PUERTO_BADVPN1" || -n "$PUERTO_BADVPN2" ]] && echo -e "${CYAN} ◈${RESET} BadVPN:7200 ${CYAN}◆${RESET} ${PUERTO_BADVPN1:-${ROJO}OFF${RESET}}    ${CYAN}◈${RESET} BadVPN:7300 ${CYAN}◆${RESET} ${PUERTO_BADVPN2:-${ROJO}OFF${RESET}}"
+    echo -e "$RAYA"
 
-cyber_line() {
-    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-}
+    printf "%b\n" "${BLANCO}\<1\>${RESET} ⚡ ${BLANCO}USUARIOS${RESET}          ${BLANCO}\<2\>${RESET} 📡 ${BLANCO}PROTOCOLOS${RESET}"
+    printf "%b\n" "${BLANCO}\<3\>${RESET} 🛠  ${BLANCO}HERRAMIENTAS${RESET}    ${BLANCO}\<5\>${RESET} ✚ ${BLANCO}PUERTOS${RESET}"
+    printf "%b\n" "${BLANCO}\<6\>${RESET} ◆  ${BLANCO}BOT TELEGRAM${RESET}    ${BLANCO}\<7\>${RESET} ⚙ ${BLANCO}NOMBRE PANEL${RESET}"
+    printf "%b\n" "${CYAN} ◈ Version: ${VERDE}${PANEL_VERSION:-v1.0}${RESET} ${CYAN}◈${RESET}"
+    echo -e "$RAYA"
 
-cyber_box_title() {
-    clear
-    echo -e "${CYAN}╔════════════════════════════════════════════════════╗${RESET}"
-    echo -e "${CYAN}║${RESET}        ${BLANCO}${BOLD}⚡ DARKZSAID CONTROL PANEL ⚡${RESET}       ${CYAN}║${RESET}"
-    echo -e "${CYAN}╚════════════════════════════════════════════════════╝${RESET}"
+    printf "%b\n" "${BLANCO}\<08\>${RESET} 💻 ${AMARILLO}ACTUALIZAR${RESET}      ${BLANCO}\<9\>${RESET} 🗑 ${ROJO}DESINSTALAR${RESET}"
+    printf "%b\n" "${BLANCO}\<99\>${RESET} 🔄 ${AMARILLO}REBOOT${RESET}"
+    echo -e "$RAYA"
+    printf "%b\n" "${BLANCO}\<0\>${RESET} ❌ ${ROJO}SALIR${RESET}"
+    echo -e "$RAYA"
     echo ""
-}
-
-cyber_section() {
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-    echo -e "${VERDE}        $1${RESET}"
-    echo -e "${AMARILLO}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
-}
-
-mostrar_puertas_activas_panel() {
-    echo -e "${AMARILLO}* Puertas Activas en su Servidor *${RESET}"
-    echo -e "${VERDE}────────────────────────────────────────────${RESET}"
-
-    ACTIVOS=0
-
-    LINEA1=""
-    LINEA2=""
-    LINEA3=""
-    LINEA4=""
-    LINEA5=""
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)'; then
-        LINEA1="${LINEA1}◦ SSH: ${VERDE}22${RESET}"
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:53[[:space:]]|:53$)'; then
-        if [[ -n "$LINEA1" ]]; then
-            LINEA1="${LINEA1}              ◦ System-DNS: ${VERDE}53${RESET}"
-        else
-            LINEA1="◦ System-DNS: ${VERDE}53${RESET}"
-        fi
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)'; then
-        LINEA2="${LINEA2}◦ SOCKS/PYTHON: ${VERDE}80${RESET}"
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:81[[:space:]]|:81$)'; then
-        if [[ -n "$LINEA2" ]]; then
-            LINEA2="${LINEA2}          ◦ WEB-NGINX: ${VERDE}81${RESET}"
-        else
-            LINEA2="◦ WEB-NGINX: ${VERDE}81${RESET}"
-        fi
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)'; then
-        LINEA3="${LINEA3}◦ SSL: ${VERDE}443${RESET}"
-        ACTIVOS=1
-    fi
-
-    if systemctl is-active --quiet dropbear 2>/dev/null || ss -tulnp 2>/dev/null | grep -qE ":(109|143)[[:space:]]"; then
-        if [[ -n "$LINEA3" ]]; then
-            LINEA3="${LINEA3}              ◦ DROPBEAR: ${VERDE}109/143${RESET}"
-        else
-            LINEA3="◦ DROPBEAR: ${VERDE}109/143${RESET}"
-        fi
-    fi
-    # ZIVPN_REAL_PORT_MARK
-    if systemctl is-active --quiet zivpn 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)'; then
-        LINEA4="${LINEA4}◦ ZIVPN: ${VERDE}5667${RESET}"
-    fi
-
-    # UDP CUSTOM HTTP Custom real
-    if systemctl is-active --quiet udp-custom 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
-        LINEA4="${LINEA4} ∘ UDP-CUSTOM: ${VERDE}36712${RESET}"
-        ACTIVOS=1
-    fi
-
-    if systemctl is-active --quiet udpmod 2>/dev/null && ss -ulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)'; then
-        LINEA4="${LINEA4}◦ UDP-HYSTERIA: ${VERDE}36712${RESET}"
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)'; then
-        if [[ -n "$LINEA4" ]]; then
-            LINEA4="${LINEA4}     ◦ BadVPN: ${VERDE}7300${RESET}"
-        else
-            LINEA4="◦ BadVPN: ${VERDE}7300${RESET}"
-        fi
-        ACTIVOS=1
-    fi
-
-    if ss -tulnp 2>/dev/null | grep -qE '(:7200[[:space:]]|:7200$)'; then
-        LINEA5="◦ BadVPN: ${VERDE}7200${RESET}"
-        ACTIVOS=1
-    fi
-
-    [[ -n "$LINEA1" ]] && echo -e "$LINEA1"
-    [[ -n "$LINEA2" ]] && echo -e "$LINEA2"
-    [[ -n "$LINEA3" ]] && echo -e "$LINEA3"
-    [[ -n "$LINEA4" ]] && echo -e "$LINEA4"
-    [[ -n "$LINEA5" ]] && echo -e "$LINEA5"
-
-    if [[ "$ACTIVOS" -eq 0 ]]; then
-        echo -e "${ROJO}No hay puertos activos detectados.${RESET}"
-    fi
-
-    echo -e "${VERDE}────────────────────────────────────────────${RESET}"
-    echo ""
-}
-
-menu_principal() {
-    while true; do
-        cyber_box_title
-
-        echo -e "${AMARILLO}» OS:${RESET} ${VERDE}$(lsb_release -ds 2>/dev/null || echo Ubuntu)${RESET} ${AMARILLO}| IP:${RESET} ${VERDE}$(get_ip)${RESET}"
-        echo -e "${AMARILLO}» RAM:${RESET} ${VERDE}$(free -m | awk '/Mem:/ {print $3"/"$2" MB"}')${RESET} ${AMARILLO}| Swap:${RESET} ${VERDE}$(free -m | awk '/Swap:/ {print $3"/"$2" MB"}')${RESET} ${AMARILLO}| Disco:${RESET} ${VERDE}$(df -h / | awk 'NR==2 {print $4" libre"}')${RESET}"
-        echo ""
-
-        mostrar_puertas_activas_panel
-
-        cyber_section "MENU PRINCIPAL"
-
-        echo -e "${ROJO}[1]${RESET} ${CYAN}➜${RESET} ${BLANCO}CONTROL USUARIOS (SSH/SSL/UDP)${RESET}        ${VERDE}●${RESET}"
-        echo -e "${ROJO}[2]${RESET} ${CYAN}➜${RESET} ${BLANCO}INSTALADORES & PROTOCOLOS${RESET}       ${CYAN}▣${RESET}"
-        echo -e "${ROJO}[3]${RESET} ${CYAN}➜${RESET} ${BLANCO}HERRAMIENTAS${RESET}                    ${AMARILLO}◉${RESET}"
-        # Opción AUTOINICIAR SCRIPT eliminada
-        echo -e "${ROJO}[5]${RESET} ${CYAN}➜${RESET} ${BLANCO}ADMINISTRAR PUERTOS${RESET}            ${VERDE}✚${RESET}"
-        echo -e "${ROJO}[6]${RESET} ${CYAN}➜${RESET} ${BLANCO}BOT TELEGRAM OPCIONAL${RESET}          ${ROJO}◆${RESET}"
-        echo -e "${ROJO}[7]${RESET} ${CYAN}➜${RESET} ${BLANCO}BANNER SSH${RESET}"
-        echo ""
-        echo -e "${ROJO}[08]${RESET} ${CYAN}➜${RESET} ${BLANCO}OPTIMIZAR / ACTUALIZAR SCRIPT${RESET}"
-        echo -e "${ROJO}[98]${RESET} ${CYAN}➜${RESET} ${ROJO}DESINSTALAR DARKZSAID${RESET}          ${ROJO}✖${RESET}"
-        echo -e "${ROJO}[99]${RESET} ${CYAN}➜${RESET} ${AMARILLO}REBOOT VPS${RESET}                  ${ROJO}⟳${RESET}"
-        echo -e "${ROJO}[0]${RESET}  ${CYAN}➜${RESET} ${ROJO}SALIR${RESET}                       ${AMARILLO}↩${RESET}"
-        echo ""
-        echo -e "${CYAN}╭──────────────────────────────────────────────────╮${RESET}"
-        echo -e "${CYAN}│${RESET} ${AMARILLO}DARKZSAID:${RESET} ${VERDE}READY${RESET}   ${AMARILLO}MODO:${RESET} ${CYAN}CYBER TECH${RESET}              ${CYAN}│${RESET}"
-        echo -e "${CYAN}╰──────────────────────────────────────────────────╯${RESET}"
-        echo ""
-
-        read -p "⚡ Seleccione una opción: " op
+    read -p "Opción: " op
 
         
 case "$op" in
             1) bash /opt/darkzsaid/menus/users_menu.sh ;;
-            2) menu_instaladores ;;
+            2) bash /opt/darkzsaid/menus/metodos_udp_menu.sh ;;
             3) menu_herramientas ;;
         4|04)
             echo "Opción eliminada."
@@ -309,12 +144,7 @@ case "$op" in
         6|06)
             bash /opt/darkzsaid/menus/dropbear_menu.sh
             ;;
-        7|07)
-            bash /opt/darkzsaid/menus/stunnel_menu.sh
-            ;;
-        8|08)
-            bash /opt/darkzsaid/darkzsaid-update.sh
-            ;;
+        7|07) bash /opt/darkzsaid/menus/configurar_nombre_panel.sh ;;
 
 
 
@@ -1627,7 +1457,6 @@ menu_herramientas() {
 }
 
 menu_banner() {
-    titulo "BANNER SSH"
 
     cat > /etc/issue.net <<'EOC'
 ════════════════════════════════════════════════════
@@ -1644,7 +1473,6 @@ EOC
     pausa
 }
 
-menu_principal
 
 
 menu_ws_established() {
@@ -2611,3 +2439,157 @@ EOSERVICE
     echo ""
     read -p "Presiona ENTER para continuar..."
 }
+
+
+# Ejecutar menú principal
+
+
+# =========================================================
+# MENU PRINCIPAL FINAL LIMPIO - DARKZSAID v1.0
+# =========================================================
+
+menu_principal() {
+    while true; do
+        clear
+
+        ROJO="\e[31m"
+        VERDE="\e[32m"
+        AMARILLO="\e[33m"
+        AZUL="\e[34m"
+        CYAN="\e[36m"
+        BLANCO="\e[97m"
+        RESET="\e[0m"
+
+        PANEL_AUTHOR="@DarkZsaid"
+        PANEL_VERSION="v1.0"
+
+        [[ -f /etc/darkzsaid/panel_logo.conf ]] && source /etc/darkzsaid/panel_logo.conf 2>/dev/null || true
+        PANEL_LOGO_TEXT="${PANEL_LOGO_TEXT:-DarkZsaid}"
+
+        SO_INFO="$(lsb_release -ds 2>/dev/null | tr -d '"' || echo Ubuntu)"
+        IP_INFO="$(curl -s --max-time 2 ifconfig.me 2>/dev/null || hostname -I 2>/dev/null | awk '{print $1}')"
+        CPU_INFO="$(nproc 2>/dev/null || echo 1)"
+        FECHA_INFO="$(date '+%d/%m/%Y-%H:%M')"
+        RAM_INFO="$(free -m | awk '/Mem:/ {print $3"Mi"}')"
+        UPTIME_INFO="$(uptime -p 2>/dev/null | sed 's/up //')"
+
+        RAYA="${CYAN}◆══════════════════════════════════════════════◆${RESET}"
+
+        echo -e "${CYAN}"
+        figlet "$PANEL_LOGO_TEXT" 2>/dev/null || echo "========== $PANEL_LOGO_TEXT =========="
+        echo -e "${RESET}"
+
+        echo -e "$RAYA"
+        echo -e "${BLANCO} ⚡ Gestor VPN/SSH by ${CYAN}${PANEL_AUTHOR}${RESET}  ${AMARILLO}◆ ${PANEL_VERSION}${RESET}"
+        echo -e "$RAYA"
+        echo -e "$RAYA"
+
+        echo -e "${CYAN} ◈${RESET} ${VERDE}SO:${RESET}     ${BLANCO}${SO_INFO}${RESET}     ${CYAN}◈${RESET} ${VERDE}IP:${RESET} ${BLANCO}${IP_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${VERDE}CPU:${RESET}    ${BLANCO}${CPU_INFO} cores${RESET}             ${CYAN}◈${RESET} ${VERDE}Fecha:${RESET} ${BLANCO}${FECHA_INFO}${RESET}"
+        echo -e "${CYAN} ◈${RESET} ${VERDE}RAM:${RESET}    ${BLANCO}${RAM_INFO}${RESET}                ${CYAN}◈${RESET} ${VERDE}Uptime:${RESET} ${BLANCO}${UPTIME_INFO}${RESET}"
+        echo -e "$RAYA"
+
+        ss -tulnp 2>/dev/null | grep -qE '(:22[[:space:]]|:22$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSH:22${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}        ${CYAN}◈${RESET} ${BLANCO}DNS:53${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:80[[:space:]]|:80$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SOCKS:80${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:443[[:space:]]|:443$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}SSL:443${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:36712[[:space:]]|:36712$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}UDP:36712${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:5667[[:space:]]|:5667$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}ZIVPN:5667${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+        ss -tulnp 2>/dev/null | grep -qE '(:7300[[:space:]]|:7300$)' && echo -e "${CYAN} ◈${RESET} ${BLANCO}BadVPN:7300${RESET} ${CYAN}◆${RESET} ${VERDE}ON${RESET}"
+
+        echo -e "$RAYA"
+
+        printf "%b\n" "${BLANCO}<1>${RESET} ⚡ ${BLANCO}USUARIOS${RESET}          ${BLANCO}<2>${RESET} 📡 ${BLANCO}PROTOCOLOS${RESET}"
+        printf "%b\n" "${BLANCO}<3>${RESET} 🛠  ${BLANCO}HERRAMIENTAS${RESET}    ${BLANCO}<5>${RESET} ✚ ${BLANCO}PUERTOS${RESET}"
+        printf "%b\n" "${BLANCO}<6>${RESET} ◆  ${BLANCO}BOT TELEGRAM${RESET}    ${BLANCO}<7>${RESET} ⚙ ${BLANCO}LOGO SUPERIOR${RESET}"
+        printf "%b\n" "${CYAN} ◈ Version: ${VERDE}${PANEL_VERSION}${RESET} ${CYAN}◈${RESET}"
+        echo -e "$RAYA"
+
+        printf "%b\n" "${BLANCO}<08>${RESET} 💻 ${AMARILLO}ACTUALIZAR${RESET}      ${BLANCO}<9>${RESET} 🗑 ${ROJO}DESINSTALAR${RESET}"
+        printf "%b\n" "${BLANCO}<99>${RESET} 🔄 ${AMARILLO}REBOOT${RESET}"
+        echo -e "$RAYA"
+        printf "%b\n" "${BLANCO}<0>${RESET} ❌ ${ROJO}SALIR${RESET}"
+        echo -e "$RAYA"
+        echo ""
+
+        read -r -p "Opción: " op
+
+        case "$op" in
+            1|01)
+                if [[ -f /opt/darkzsaid/menus/users_menu.sh ]]; then
+                    bash /opt/darkzsaid/menus/users_menu.sh
+                elif declare -F menu_usuarios >/dev/null; then
+                    menu_usuarios
+                else
+                    echo "No se encontró menú de usuarios."
+                    read -p "ENTER..."
+                fi
+            ;;
+
+            2|02)
+                bash /opt/darkzsaid/menus/protocolos_menu_completo.sh
+            ;;
+
+            3|03)
+                if declare -F menu_herramientas >/dev/null; then
+                    menu_herramientas
+                else
+                    echo "No se encontró menú herramientas."
+                    read -p "ENTER..."
+                fi
+            ;;
+
+            5|05)
+                if declare -F menu_puertos >/dev/null; then
+                    menu_puertos
+                else
+                    echo "No se encontró menú puertos."
+                    read -p "ENTER..."
+                fi
+            ;;
+
+            6|06)
+                if declare -F menu_bot >/dev/null; then
+                    menu_bot
+                else
+                    echo "No se encontró menú bot."
+                    read -p "ENTER..."
+                fi
+            ;;
+
+            7|07)
+                bash /opt/darkzsaid/menus/configurar_nombre_panel.sh
+            ;;
+
+            8|08)
+                bash /opt/darkzsaid/darkzsaid-update.sh 2>/dev/null || {
+                    echo "Actualizador no encontrado."
+                    read -p "ENTER..."
+                }
+            ;;
+
+            9|09)
+                bash /opt/darkzsaid/menus/uninstall_darkzsaid.sh 2>/dev/null || {
+                    echo "Desinstalador no encontrado."
+                    read -p "ENTER..."
+                }
+            ;;
+
+            99)
+                reboot
+            ;;
+
+            0|00)
+                clear
+                exit 0
+            ;;
+
+            *)
+                echo "Opción inválida."
+                sleep 1
+            ;;
+        esac
+    done
+}
+
+menu_principal
+
