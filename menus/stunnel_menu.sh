@@ -1,4 +1,5 @@
 #!/bin/bash
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
 
 ROJO="\e[31m"
 VERDE="\e[32m"

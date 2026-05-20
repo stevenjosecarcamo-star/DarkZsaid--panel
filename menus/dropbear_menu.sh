@@ -1,4 +1,5 @@
 #!/bin/bash
+source /opt/darkzsaid/menus/ui_instalacion.sh 2>/dev/null || true
 
 source /opt/darkzsaid/lib/install_clean.sh 2>/dev/null || true
 
@@ -36,7 +37,7 @@ instalar_dropbear_full() {
 
     clean_title "INSTALANDO DROPBEAR SSH"
 
-    clean_task "Instalando paquete Dropbear" "apt-get update -y >/dev/null 2>&1 && apt-get install -y dropbear >/dev/null 2>&1"
+    clean_task "Instalando paquete Dropbear" "apt-get update -y >/dev/null 2>&1 >/dev/null 2>&1 && apt-get install -y >/dev/null 2>&1 dropbear >/dev/null 2>&1"
 
     clean_task "Creando configuración" "cat > /etc/default/dropbear <<'EOD'
 NO_START=0
@@ -48,7 +49,7 @@ EOD"
 
     clean_task "Abriendo puertos" "ufw allow 109/tcp >/dev/null 2>&1 || true; ufw allow 143/tcp >/dev/null 2>&1 || true; ufw reload >/dev/null 2>&1 || true"
 
-    clean_task "Activando servicio" "systemctl enable dropbear >/dev/null 2>&1; systemctl restart dropbear"
+    clean_task "Activando servicio" "systemctl enable dropbear >/dev/null 2>&1 >/dev/null 2>&1; systemctl restart dropbear >/dev/null 2>&1"
 
     clean_task "Verificando Dropbear" "systemctl is-active --quiet dropbear"
 
@@ -73,7 +74,7 @@ reiniciar_dropbear() {
 
     clean_title "REINICIANDO DROPBEAR SSH"
 
-    clean_task "Reiniciando servicio" "systemctl restart dropbear"
+    clean_task "Reiniciando servicio" "systemctl restart dropbear >/dev/null 2>&1"
     clean_task "Verificando Dropbear" "systemctl is-active --quiet dropbear"
 
     clean_done
