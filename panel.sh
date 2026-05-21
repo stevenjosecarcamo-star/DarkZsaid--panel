@@ -95,8 +95,7 @@ cat <<'LOGO'
 |____/ \__,_|_|  |_|\_/____|___/\___|_|\__,_|
 LOGO
 echo -e "${RESET}"
-
-    echo -e "$RAYA"
+        echo -e "$RAYA"
     echo -e "${BLANCO} ⚡ Gestor VPN/SSH by ${CYAN}${PANEL_AUTHOR:-@DarkZsaid}${RESET}  ${AMARILLO}◆ ${PANEL_VERSION:-v1.0}${RESET}"
     echo -e "$RAYA"
     echo ""
@@ -2476,9 +2475,8 @@ menu_principal() {
         RAYA="${CYAN}◆══════════════════════════════════════════════◆${RESET}"
 
         echo -e "${CYAN}"
-                toilet -f big "$PANEL_LOGO_TEXT" 2>/dev/null || figlet "$PANEL_LOGO_TEXT" 2>/dev/null || echo "========== $PANEL_LOGO_TEXT =========="
+                toilet -f big "$PANEL_LOGO_TEXT" 2>/dev/null | sed "/^[[:space:]]*$/d" || figlet "$PANEL_LOGO_TEXT" 2>/dev/null | sed "/^[[:space:]]*$/d" || echo "========== $PANEL_LOGO_TEXT =========="
         echo -e "${RESET}"
-
         echo -e "$RAYA"
         echo -e "${BLANCO} ⚡ Gestor VPN/SSH by ${CYAN}${PANEL_AUTHOR}${RESET}  ${AMARILLO}◆ ${PANEL_VERSION}${RESET}"
         echo -e "$RAYA"
